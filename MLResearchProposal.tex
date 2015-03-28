@@ -1,0 +1,64 @@
+% --------------------------------------------------------------
+% This is all preamble stuff that you don't have to worry about.
+% Head down to where it says "Start here"
+% --------------------------------------------------------------
+\documentclass[10pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{verbatim}
+\usepackage{color}
+\usepackage[toc,page]{appendix}
+
+
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newenvironment{theorem}[2][Theorem]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{lemma}[2][Lemma]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{exercise}[2][Exercise]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{problem}[2][Problem]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{question}[2][Question]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{corollary}[2][Corollary]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\begin{document}
+% --------------------------------------------------------------
+% Start here
+% --------------------------------------------------------------
+\title{Research Project Outline: Applications of Reinforcement Learning in Robotics and Optimal Control}%replace X with the appropriate number
+\author{\\ %replace with your name
+Kristopher L. Reynolds\\
+Matthew C. Sheckells
+\\} %if necessary, replace with your course title
+\maketitle
+\section{Proposal}
+The fields of robotics and optimal control have benefitted from concepts of reinforcement learning (RL) \cite{kober_reinforcement_2013} \cite{kaelbling_reinforcement_1996}. From an optimal control standpoint, the objective is to minimize some cost analogously to how RL aims to maximize a reward.  Several robotic systems in  \cite{bhasin_reinforcement_2011} and \cite{hester_rtmba:_2012} have all successfully implemented this notion and shown that performance equalled and in some cases exceeded that of hand-tuned controllers. The advantage of RL is that it is robust to changes in a system, such as malfunctioning actuators, changes in models parameters (i.e. inertia), and external disturbances. 
+\\
+\\
+We would like to illustrate some previous implementations of RL for a few robotic systems that use it in an optimal control or planning context in \cite{andersson_model-based_2015} and \cite{ng_autonomous_2006}
+. Another goal is to be able to infer certain guarantees such as how many iterations it will take for a robotic system to learn a particular control policy. A variant of Q-learning, which is model-free RL algorithm, has been shown to be PAC learnable \cite{strehl_pac_2006}.  
+\\
+\\
+Our labs (Chirikjian's RPK lab and Kobilarov's ASCOL lab) both aim to implement algorithms on real robotic systems. We hope to use a Real-Time RL framework established as a ROS \cite{quigley_ros:_2009} package to validate these results in simulation and possibly on real hardware. 
+\nocite{yang_multiagent_2004}
+\nocite{kim_autonomous_2003}
+
+\newpage
+\bibliography{ML}{}
+\bibliographystyle{plain}
+
+
+
+
+% --------------------------------------------------------------
+% You don't have to mess with anything below this line.
+% --------------------------------------------------------------
+\end{document}
