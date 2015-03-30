@@ -43,7 +43,6 @@ Matthew C. Sheckells
 The fields of robotics and optimal control have benefitted from concepts of reinforcement learning (RL) \cite{kober_reinforcement_2013} \cite{kaelbling_reinforcement_1996}. From an optimal control standpoint, the objective is to minimize some cost analogously to how RL aims to maximize a reward.  Several robotic systems in  \cite{bhasin_reinforcement_2011} and \cite{hester_rtmba:_2012} have all successfully implemented this notion and shown that performance equalled and in some cases exceeded that of hand-tuned controllers. The advantage of RL is that it is robust to changes in a system, such as malfunctioning actuators, changes in models parameters (i.e. inertia), and external disturbances. 
 
 DISCUSS REFERENCES MORE.
-ALSO DEFINE WHAT A POLICY IS
 
 \section{Reinforcement Learning: The Learning Scenario}
 In the reinforcement learning (RL) framework, the learner collects information via a set of actions through interaction with an environment. There are two types of information received by the learner: the current state, and some notion of a reward that is related to a task and its corresponding goal. Reinforcement learning differs from supervised-learning in that for supervised learning, there is generally some fixed distribution. With RL, the distribution is governed by some policy, where small changes in this policy can induce significant changes on rewards received. 
@@ -131,6 +130,7 @@ $R_{max}$ is another reinforcement learning algorithm proved to be PAC-MDP that 
 
 \nocite{yang_multiagent_2004}
 \nocite{kim_autonomous_2003}
+\nocite{mohri_foundations_2012}
 
 \newpage
 \bibliography{ML}{}
