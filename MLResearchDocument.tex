@@ -40,13 +40,12 @@ Matthew C. Sheckells
 \\} %if necessary, replace with your course title
 \maketitle
 \section{Introduction}
-The fields of robotics and optimal control have benefitted from concepts of reinforcement learning (RL) \cite{kober_reinforcement_2013} \cite{kaelbling_reinforcement_1996}. From an optimal control standpoint, the objective is to minimize some cost analogously to how RL aims to maximize a reward.  Several robotic systems in  \cite{bhasin_reinforcement_2011} and \cite{hester_rtmba:_2012} have all successfully implemented this notion and shown that performance equalled and in some cases exceeded that of hand-tuned controllers. The advantage of RL is that it is robust to changes in a system, such as malfunctioning actuators, changes in models parameters (i.e. inertia), and external disturbances. 
-
-DISCUSS REFERENCES MORE.
-ALSO DEFINE WHAT A POLICY IS
-
-\section{Reinforcement Learning: The Learning Scenario}
-In the reinforcement learning (RL) framework, the learner collects information via a set of actions through interaction with an environment. There are two types of information received by the learner: the current state, and some notion of a reward that is related to a task and its corresponding goal. Reinforcement learning differs from supervised-learning in that for supervised learning, there is generally some fixed distribution. With RL, the distribution is governed by some policy, where small changes in this policy can induce significant changes on rewards received. 
+Concepts of machine learning are very much at the forefront of modern research interests. However, the popular supervised learning framework does not account for environments that are constantly in flux. This setting is relevant to Autonomous underwater vehicles navigating unknown terrains, or fault detection in teams of swarming land-based robots. A notion that suggests a means to handle these changing environments is reinforcement learning (RL). Unlike supervised learning, RL actively receives information by inducing an \textit{environment} through \textit{actions}. By doing so, two types of information are rendered: the current \textit{state}, and some notion of a quantifiable \textit{reward}. This reward is related to an a priori defined task that has a corresponding goal. 
+\\
+\\
+The fields of robotics and optimal control have benefitted from concepts of reinforcement learning\cite{kober_reinforcement_2013} \cite{kaelbling_reinforcement_1996}, with several robotic systems in  \cite{bhasin_reinforcement_2011} and \cite{hester_rtmba:_2012} having already implemented this technique, showing that performance equalled and in some cases exceeded that of hand-tuned controllers. The advantage of RL is that it is robust to changes in a system, such as malfunctioning actuators, changes in models parameters (i.e. inertia), and external disturbances. This reports aims to balance theoretical results with empirical demonstrations of successful RL implementation. 
+% ^Figured the first paragraph of the proposal could be used as a starting point
+% We can discuss all of our references in more detail here
 
 \section{Q-learning}
 Q-learning is an algorithm where the objective is to estimate the optimal state-action value $Q^*$, where the model of interest is unknown. The optimal policy is given by
@@ -54,8 +53,7 @@ $$
 Insert Equation here
 $$
 
-A variant of the algorithm, called Delayed Q-learning, has been shown to by Probably Approximately Correct in Markov Decision Processes (PAC-MDP) \cite{strehl_pac_2006}.  A PAC-MDP algorithm follows an $\epsilon$-optimal policy on all but a polynomial number of timesteps, with probability at least $1-\delta$ for $\epsilon>0, \delta > 0$.
-
+A variant of the algorithm, called Delayed Q-learning, has been shown to by Probably Approximately Correct in Markov Decision Processes (PAC-MDP) \cite{strehl_pac_2006}.
 \subsection{Delayed Q-learning}
 Delayed Q-learning differs from traditional Q-learning in a few ways.  Rather than updating the Q-values at every time step, the algorithm updates $Q(s,a)$ when a state-action pair $(s,a)$ has been executed $m$ times since its last update.  It also uses a different update function:
 $$Q_{t+1}(s,a) = \frac{1}{m}\sum_{i=1}^m(r_{k_i}+\gamma V_{k_i}(s_{k_i})) + \epsilon_1$$  
@@ -132,6 +130,7 @@ $R_{max}$ is another reinforcement learning algorithm proved to be PAC-MDP that 
 
 \nocite{yang_multiagent_2004}
 \nocite{kim_autonomous_2003}
+\nocite{mohri_foundations_2012}
 
 \newpage
 \bibliography{ML}{}
