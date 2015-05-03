@@ -48,11 +48,21 @@ The fields of robotics and optimal control have benefitted from concepts of rein
 \item Under-modeling and Uncertainty: The full state may not be observable, and noise requires some method of state estimation.
 \item Goal specification: Crafting reward functions (i.e. \textit{reward shaping}) may be difficult since rewards can rely upon successful completion of a task. This may lead to a sparsity of instances actually influencing the learning of a robotic system.
 \end{itemize}
-The outline of the document is the following. First, the popular Q-learning algorithm will be  defined.
-\section{Q-learning}
-Q-learning is an algorithm where the objective is to estimate the optimal state-action value $Q^*$, where the model of interest is unknown. The optimal policy is given by
+The outline of the document is the following. First, the popular Q-learning algorithm will be  defined. Next, a rendition of Q-learning called delayed Q-learning will be presented with a proof sketch showing that it is Probably Approximately Correct in Markov Decision Processes (i.e. PAC-MDP), which is a slightly different notion from general PAC learnability (more on this later). It will then be discussed how Q-learning is handled in continuous state/action spaces, which is relevant to robotics applications since modeling is generally done so in a continuous setting. An algorithm called the wire fitted neural network (WNN) will be presented with a proof that this approach is indeed PAC learnable. Closing the document is an implementation of this algorithm on a simple system.
+\section{Reinforcement Learning}
+Define reinforcement learning.  Define MDPs. Define a policy.  Quantify a policy through its policy value. Definition of optimal policy. State action value function.
+\\
+\\
+Reinforcement learning differs from the supervised learning setting in that there is no distribution from which samples (or features) are drawn. Rather it is through some \textit{policy} defined as the mapping
 $$
-Insert Equation here
+\pi : S \rightarrow A
+$$
+where $S$ and $A$ are sets of states and actions respectively that define this distribution. Another more intuitive concept of RL is that immediate rewards are extracted through actions made with some environment. Through these incremental actions, whether it be through the touching of a hot stovetop or running over a pothole in the road on your way to work, us humans are learning constantly throughout our lives. It is not appropriate to consider this learning as that of a batch scenario. This on its own gives RL quite the appeal. Thus the objective is to obtain some optimal policy. 
+
+\section{Q-learning}
+Q-learning is an algorithm where the objective is to estimate the optimal state-action value function $Q^*$, where the model of interest is unknown. The optimal state-action value function is given by
+$$
+Q^*(s,a) = E[r(s,a)] + \gamma \sum_{s' \in S}Pr[s' | s,a]V^*(s')
 $$
 
 A variant of the algorithm, called Delayed Q-learning, has been shown to by Probably Approximately Correct in Markov Decision Processes (PAC-MDP) \cite{strehl_pac_2006}.
