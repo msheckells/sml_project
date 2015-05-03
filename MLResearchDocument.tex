@@ -150,6 +150,40 @@ $R_{max}$ is another reinforcement learning algorithm proved to be PAC-MDP that 
 \section{Q-Learning in Continuous State/Action Spaces}
 \section{Discussion/Use of Neural Nets}
 \subsection{Learning Bounds on Neural Nets}
+Generalization bounds can be formulated for multilayered neural networks through inequalities involving the growth function $\Pi_F(m)$ where $F$ is a function class. Now consider the function classes $F_1$ and $F_2$ as well as their Cartesian product $F_1 \times F_2$ and composition $F = F_1 \circ F_2$. The following lemmas will deem useful.
+\\
+\\
+\textbf{Growth Function Lemma 1}
+$$
+\Pi_F(m) \leq \Pi_{F_1}(m)\Pi_{F_2}(m)
+$$
+\\
+\\
+\textbf{Growth Function Lemma 2}
+$$
+\Pi_F(m) \leq \Pi_{F_1}(m)\Pi_{F_2}(m)
+$$
+where $F$ is the composition $F$ = $F_1 \circ F_2$.
+\\
+\\
+Now consider the function composition
+$$
+F = F_l \circ F_{l-1} \circ \cdots F_2 \circ F_1
+$$
+This implies via Lemma 2
+$$
+\Pi_F(m) \leq \prod_{i=1}^l \Pi_{F_i}(m)
+$$
+STILL WORKING THROUGH THIS. Ultimately we use Sauer's lemma to get a bound on the growth function of an NN. The VC dimension for halfspaces in $d$ dimensions is d+1. We will ultimately show that w.p. at least 1 - $\delta$
+$$
+R(h) \leq \widehat{R}(h) + \sqrt{\frac{2\log{\Pi_H{(m)}}}{m}} + \sqrt{\frac{\log{\frac{1}{\delta}}}{2m}}
+$$
+which is less than
+$$
+R(h) \leq \widehat{R}(h) + \sqrt{\frac{2log[\prod_{i=1}^l\prod_{i=1}^{d_i}(\frac{me}{d_{i-1}+1})^{d_{i-1}+1}]}{m}} + \sqrt{\frac{\log{\frac{1}{\delta}}}{2m}} 
+$$
+
+
 \subsection{Implementation}
 \section{Conclusion}
 
