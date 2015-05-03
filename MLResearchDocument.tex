@@ -66,7 +66,7 @@ Q^*(s,a) = E[r(s,a)] + \gamma \sum_{s' \in S}Pr[s' | s,a]V^*(s')
 $$
 
 A variant of the algorithm, called Delayed Q-learning, has been shown to by Probably Approximately Correct in Markov Decision Processes (PAC-MDP) \cite{strehl_pac_2006}.
-\subsection{Delayed Q-learning}
+\section{Delayed Q-learning}
 Delayed Q-learning differs from traditional Q-learning in a few ways.  Rather than updating the Q-values at every time step, the algorithm updates $Q(s,a)$ when a state-action pair $(s,a)$ has been executed $m$ times since its last update.  It also uses a different update function:
 $$Q_{t+1}(s,a) = \frac{1}{m}\sum_{i=1}^m(r_{k_i}+\gamma V_{k_i}(s_{k_i})) + \epsilon_1$$  
 where $r_i$ is the $i$th reward received and $s_{k_1},\dots,s_{k_m}$ are the $m$ most recent next-states observed form executing $(s,a)$ at times $k_1 < \dots < k_m = t$, respectively. The user defines $\epsilon_1$ and $m$.   
@@ -139,6 +139,11 @@ So, Delayed Q-learning will follow an $\epsilon$-optimal policy on all but $O\le
 \\ 
 \\
 $R_{max}$ is another reinforcement learning algorithm proved to be PAC-MDP that we can discuss.
+\section{Q-Learning in Continuous State/Action Spaces}
+\section{Discussion/Use of Neural Nets}
+\subsection{Learning Bounds on Neural Nets}
+\subsection{Implementation}
+\section{Conclusion}
 
 \nocite{yang_multiagent_2004}
 \nocite{kim_autonomous_2003}
