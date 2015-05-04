@@ -230,3 +230,187 @@ $$
 % You don't have to mess with anything below this line.
 % --------------------------------------------------------------
 \end{document}
+=======
+\maketitle
+
+\section{Introduction}
+Concepts of machine learning are very much at the forefront of modern research interests. However, the popular supervised learning framework does not account for environments that are constantly in flux. This setting is relevant to robotic vehicles navigating unknown terrains. A notion that suggests a means to handle these changing environments is reinforcement learning (RL). Unlike supervised learning, RL actively receives information by engaging an environment through \textit{actions}. By doing so, two types of information are rendered: the current \textit{state}, and some notion of a quantifiable \textit{reward}. This reward is related to an a priori defined task that has a corresponding goal. RL aims to learn reward values for taking a particular action from a particular state, so that a system can learn to act optimally in a given situation.
+
+The fields of robotics and optimal control have benefitted from concepts of reinforcement learning \cite{kober_reinforcement_2013}\cite{kaelbling_reinforcement_1996}. Several robotic systems in  \cite{bhasin_reinforcement_2011} and \cite{hester_rtmba:_2012} have implemented this technique, showing that performance equalled and in some cases exceeded that of hand-tuned controllers. The advantage of RL is that it is robust to changes in a system, such as malfunctioning actuators, changes in models parameters, and external disturbances. Optimal control is similar in several ways to RL. Moreover, both have some notion of finding a \textit{policy} that optimizes some objective function. For optimal control, this is minimizing some cost, whereas for RL, it is maximizing a reward. For robotics-based RL, there are several challenges that need to be addressed for RL to be realized.
+\begin{itemize}
+\item Continuous State and Action Space: Robots have sensors that output data in a continuous domain.  Likewise, robots themselves act in a continuous environment. This issue is addressed in \cite{gaskett_thesis} and \cite{q_learning_navigation}.
+\item Under-modeling and Uncertainty: The full state may not be observable, and noise requires some method of state estimation.
+\item Goal specification: Crafting reward functions (i.e. \textit{reward shaping}) may be difficult since rewards can rely upon successful completion of a task. This may lead to a sparsity of instances actually influencing the learning of a robotic system.
+\end{itemize}
+The outline of the document is the following. First, the popular Q-learning algorithm will be  defined. Next, a rendition of Q-learning called delayed Q-learning will be presented with a proof sketch showing that it is Probably Approximately Correct in Markov Decision Processes (i.e. PAC-MDP), which is a slightly different notion from general PAC learnability (more on this later). It will then be discussed how Q-learning is handled in continuous state/action spaces, which is relevant to robotics applications since modeling is generally done so in a continuous setting. An algorithm called the wire fitted neural network (WNN) will be presented with a proof that this approach is indeed PAC learnable. Closing the document is an implementation of this algorithm on a simple system.
+\section{Reinforcement Learning}
+Define reinforcement learning. Talk about exploitation vs exploration.  Define MDPs. Define a policy.  Quantify a policy through its policy value. Definition of optimal policy. State action value function.
+\\
+\\
+Reinforcement learning (RL) can be regarded as the collection of information through a course of actions via interaction with an environment, through which the current state and some immediate reward are received. The agent (learner) must deem whether it is more appropriate to explore further unknown states $s \in S$ and actions $a \in A$ or utilize the information already collected in order to optimize (maximize) the current reward $r(s,a)$. This tradeoff if formally referred to as \textit{exploration vs. expoitation}. RL differs from supervised learning in that there is no distribution from which samples (or features) are drawn. Rather it is through some \textit{policy} given as the mapping
+$$
+\pi : S \rightarrow A
+$$
+that this distribution is defined. Another more intuitive concept of RL is that immediate rewards are incrementally extracted through actions made with some environment (as opposed to a batch collection and training scenario). This incremental obtainment of information is more reflective of human nature in that we tend to interact with our environment and learn based off the actions we make and information we receive. An example would be driving over a pothole in the road, and realizing that this negative reward will influence actions taken in the future (i.e. perhaps anticipate this pothole or take a different route). This policy can be quantified in terms of what is known to be a \textit{policy value}, $V_{\pi}$ which is given as 
+$$
+V_{\pi} = E[\sum_{\tau = 0}^{T-t}r(s_{t+\tau},\pi(s_{t+\tau}))|s_t = s].
+$$
+Qualitatively, this policy value is the expected reward $r(s,a)$ parameterized by a state $s$ and action $a$ that is yielded when starting at $s$ using policy $\pi$. It is summed over a finite time horizon. The \textit{optimal policy} is in terms of the policy value, moreover $V^{*}=V_{\pi^*}(s) = \max_{\pi} V_{\pi}(s)$. Therefore $V^{*}$ is the optimal cummulative reward that the learner may expect to receive while starting at $s$. The next relevant quantity is the optimal state-action value function $Q^*(s)$, given in terms of the optimal policy value as
+$$
+Q^*(s,a) = E[r(s,a)] + \gamma \sum_{s' \in S}Pr[s' | s,a]V^*(s')
+$$
+The next section defines the Q-learning algorithm that seeks out this optimal state-action value function. 
+\section{Q-learning}
+Q-learning is an algorithm where the objective is to estimate the optimal state-action value function $Q^*$, when the model of interest is unknown. The optimal state-action value function can be defined implicitly as
+$$
+Q^*(s,a) = E_{s'}[r(s,a) + \gamma \max_{a \in A}Q^*(s,a)]
+$$
+\\
+\\
+A variant of the algorithm, called Delayed Q-learning, has been shown to by Probably Approximately Correct in Markov Decision Processes (PAC-MDP) \cite{strehl_pac_2006}.
+\section{Delayed Q-learning}
+Delayed Q-learning differs from traditional Q-learning in a few ways.  Rather than updating the Q-values at every time step, the algorithm updates $Q(s,a)$ when a state-action pair $(s,a)$ has been executed $m$ times since its last update.  It also uses a different update function:
+$$Q_{t+1}(s,a) = \frac{1}{m}\sum_{i=1}^m(r_{k_i}+\gamma V_{k_i}(s_{k_i})) + \epsilon_1$$  
+where $r_i$ is the $i$th reward received and $s_{k_1},\dots,s_{k_m}$ are the $m$ most recent next-states observed form executing $(s,a)$ at times $k_1 < \dots < k_m = t$, respectively. The user defines $\epsilon_1$ and $m$.   
+% We will have some of these vars defined from earlier so I want define them all here
+After $m$ executions of $(s,a)$ an update will only occur if the new Q-value estimate is at least $\epsilon_1$ smaller than the previous estimate.  If it is not smaller, then updates of $Q(s,a)$ are no longer allowed until another Q-value estimate (for a different state-action pair) is updated.
+
+Waiting for $m$ samples before updating has an averaging effect that helps minimize any randomness. Adding $\epsilon_1$ to the update function helps achieve optimism which in turn facilitates safe exploration. By starting with high initial Q-values and only allowing Q-values to decrease ensures that each state is regularly visited and that each action is tried from every state.  This makes sure each state-action pair receives enough samples to converge to the correct Q-value.%<- discuss optimism more?
+In the following section, we outline the proof that shows Delayed Q-learning is PAC-MDP.
+
+
+\subsubsection{Proof Sketch: Delayed Q-learning is PAC-MDP}
+
+Should probably explain how PAC-MDP is different than PAC?
+
+
+The number of successful Q-value updates for a particular $(s,a)$ is bounded by
+
+$$\kappa = \frac{1}{(1-\gamma)\epsilon_1}.$$
+
+This follows from the fact that $Q(s,a)$ is initialized to $1/(1-\gamma)$ and that every $Q(s,a)$ results in a decrease of at least $\epsilon_1$ (and it is assumed rewards are non-negative).  For $A$ total actions and $S$ total states, at most $SA\kappa$ updates can occur.  Now, a state-action pair $(s,a)$ is initially allowed to attempt an update.  Then, a successful update of at most one other Q-value must occur  for $(s,a)$ to attempt another update.  So, there can be at most $1+SA\kappa$ attempted updates of $(s,a)$.  Therefore, there are at most
+$$SA(1+SA\kappa)$$
+total attempted updates.
+
+During timestep $t$ of learning define $K_t$ to be the set of all state-action pairs $(s,a)$ such that 
+
+$$Q_t(s,a) - \left(R(s,a)+\gamma\sum_{s'}T(s'|s,a)V_t(s')\right) \leq 3\epsilon_1.$$
+
+A value for $m$ is specified as 
+
+$$m=\frac{\ln{3SA(1+SA\kappa)/\delta}}{2\epsilon_1^2(1-\gamma)^2}.$$
+
+Strehl et al. prove the following lemmas:
+
+\begin{enumerate}
+
+\item Consider the following assumption:  Suppose an attempted update of state-action pair $(s,a)$ occurs at time $t$, and that the $m$ most recent experiences of $(s,a)$ happened at times $k_1 < \dots < k_m = t$.  If $(s,a) \notin K_{k_1}$, then the attempted update will be successful.  The probability that this assumption is violated is at most $\delta/3$.  
+
+% A proof sketch is given for this in Strehl
+
+\item During the execution of Delayed Q-learning, $Q_t(s,a) \geq Q^*(s,a)$ holds for all timesteps $t$ and state-action pairs $(s,a)$ with probability at least $1-\delta/3$.
+
+\item The number of timesteps $t$ such that a state-action pair $(s,a) \notin K_t$ is experienced is at most $2mSA\kappa$.
+
+\item Let $M$ be an MDP, $K$ a set of state-action pairs, $M'$ an MDP equal to $M$ on $K$ (identical transition and reward functions), $\pi$ a policy, and
+$T$ some positive integer. Let $A_M$ be the event that a state-action pair not in $K$ is encountered in a trial generated by starting from state $s$ and following $\pi$ for $T$ timesteps in $M$. Then,
+$$V_M^\pi(s,T)\geq V_{M'}^{\pi}(s,T)-\text{Pr}(A_M)/(1-\gamma).$$
+
+\end{enumerate}
+
+Suppose Delayed Q-learning is run on an MDP $M$. It is assumed that the assumption in lemma 1 holds and that $Q_t(s,a) \geq Q^*(s,a)$.  These assumptions are broken with probability at most $2\delta/3$ by lemmas 1 and 2.  
+Let $T=O\left(\frac{1}{1-\gamma}\ln{\frac{1}{\epsilon_2(1-\gamma)}}\right)$ be large enough so that $|V_{M'}^{\pi_t}(s_t,T) - V_{M'}^{\pi_t}(s_t)| \leq \epsilon_2$.   Let $\text{Pr}(U)$ denote the probability of
+the algorithm performing a successful update on some
+state-action pair $(s, a)$, while executing policy
+$\mathcal{A}_t$ from state $s_t$ in $M$ for $T$ timesteps. From the previous statements and lemma 5 we have 
+\begin{align*}
+V_M^{\mathcal{A}_t} & \geq V_{M'}^{\mathcal{A}_t}(s_t,T)-\text{Pr}(A_M)/(1-\gamma) \\
+ & \geq V_{M'}^{\pi_t}(s_t,T)-\text{Pr}(A_M)/(1-\gamma) -\text{Pr}(U)/(1-\gamma) \\
+ & \geq V_{M'}^{\pi_t}(s_t)-\epsilon_2-(\text{Pr}(A_M)/(1-\gamma) +\text{Pr}(U)/(1-\gamma)). 
+\end{align*}
+
+
+
+More steps to be explained in between....
+
+The number of timesteps needed for 
+$$V_{\mathcal{A}_t}^{\pi_t}(s_t,T) \geq V^*(s_t)-\epsilon$$
+is 
+$$O\left(\frac{SA}{\epsilon^4(1-\gamma)^8}\ln{\frac{1}{\delta}}\ln{\frac{1}{\epsilon(1-\gamma)}}\ln{\frac{SA}{\delta\epsilon(1-\gamma)}}\right)$$
+So, Delayed Q-learning will follow an $\epsilon$-optimal policy on all but $O\left(\frac{SA}{\epsilon^4(1-\gamma)^8}\ln{\frac{1}{\delta}}\ln{\frac{1}{\epsilon(1-\gamma)}}\ln{\frac{SA}{\delta\epsilon(1-\gamma)}}\right)$ steps with probability at least $1-\delta$.  Thus, it is PAC-MDP.
+\\ 
+\\
+$R_{max}$ is another reinforcement learning algorithm proved to be PAC-MDP that we can discuss.
+\section{Q-learning with Continuous States and Actions}
+As we have discussed, in traditional Q-learning, the state and action spaces of a system are discretized and finite, with a single $Q$-value assigned to each state-action pair.  Since robots act in the real world where measurements are continuously valued, it is more natural to represent states in a continuous domain.  This alleviates any issues with perceptual aliasing.  One could attempt to approximate a continuous space by finely discretizing it, but this increases the amount of memory required to store $Q$-values and the learning time becomes intractable.  In a grid-based representation, there is no notion of similarity between neighboring states, so discrete representations do not generalize well.  
+
+Generalization can be introduced by mapping states to action-values via a function approximator.  Several existing systems use a neural network as the function approximator \cite{lin} \cite{deep_rl} \cite{gaskett_thesis}. In \cite{lin} and \cite{deep_rl}, each possible action has an associated neural network which approximates the reward of executing that action from the state input to the neural net.  
+
+In addition to continous state representations, real robots benefit from a continuous control space.  Like the state space, actions can be discretized with the same drawbacks: high memory use and poor generalization.  Furthermore, using continuous actions gives more accurate and predictable movement, reduces wear, and improves energy consumption in practice\cite{gaskett_thesis}.  There exists a number of approaches for incorporating both continous state and action spaces into Q-learning.  In \cite{gaskett_thesis}, a single neural network is used, where the outputs correspond to control points of an action-reward interpolator.  The Q-value of any given action can be smoothly, approximately computed using the interpolator. \cite{carden2014} uses Nadaraya-Watson kernel regression \cite{} to estimate the Q-value of a state-action pair based on past experiences and shows convergence to the true Q-values within some tolerance with probability 1.  
+
+\section{Discussion/Use of Neural Nets}
+\subsection{Learning Bounds on Neural Nets}
+Generalization bounds can be formulated for multilayered neural networks (NN) through inequalities involving the growth function $\Pi_F(m)$ where $F$ is a function class. First some nomenclature for the NN classifier will be presented. Let $k$ denote the $k^{th}$ node in a neural network. For binary classification, the activation function $\sigma$ is defined as
+$$
+\sigma(t) = sgn(t)
+$$
+where
+$$
+t = w_k^Tx - \theta_k
+$$
+\\
+ Consider the function classes $F_1$ and $F_2$ as well as their Cartesian product $F_1 \times F_2$ and composition $F = F_1 \circ F_2$. The following lemmas will deem useful.
+\\
+\\
+\textbf{Growth Function Lemma 1}
+$$
+\Pi_F(m) \leq \Pi_{F_1}(m)\Pi_{F_2}(m)
+$$
+\\
+\\
+\textbf{Growth Function Lemma 2}
+$$
+\Pi_F(m) \leq \Pi_{F_1}(m)\Pi_{F_2}(m)
+$$
+where $F$ is the composition $F$ = $F_1 \circ F_2$.
+\\
+\\
+Now consider the function composition
+$$
+F = F_l \circ F_{l-1} \circ \cdots F_2 \circ F_1
+$$
+This implies via Lemma 2
+$$
+\Pi_F(m) \leq \prod_{i=1}^l \Pi_{F_i}(m)
+$$
+STILL WORKING THROUGH THIS. Ultimately we use Sauer's lemma to get a bound on the growth function of an NN. The VC dimension for halfspaces in $d$ dimensions is d+1. We will ultimately show that w.p. at least 1 - $\delta$
+$$
+R(h) \leq \widehat{R}(h) + \sqrt{\frac{2\log{\Pi_H{(m)}}}{m}} + \sqrt{\frac{\log{\frac{1}{\delta}}}{2m}}
+$$
+which is less than
+$$
+R(h) \leq \widehat{R}(h) + \sqrt{\frac{2log[\prod_{i=1}^l\prod_{i=1}^{d_i}(\frac{me}{d_{i-1}+1})^{d_{i-1}+1}]}{m}} + \sqrt{\frac{\log{\frac{1}{\delta}}}{2m}} 
+$$
+
+
+\subsection{Implementation}
+\section{Conclusion}
+
+
+
+\nocite{yang_multiagent_2004}
+\nocite{kim_autonomous_2003}
+\nocite{mohri_foundations_2012}
+
+\newpage
+\bibliography{ML}{}
+\bibliographystyle{plain}
+
+
+
+
+% --------------------------------------------------------------
+% You don't have to mess with anything below this line.
+% --------------------------------------------------------------
+\end{document}
+
