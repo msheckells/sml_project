@@ -61,6 +61,15 @@ The fields of robotics and optimal control have benefitted from concepts of rein
 \item Goal specification: Crafting reward functions (i.e. \textit{reward shaping}) may be difficult since rewards can rely upon successful completion of a task. This may lead to a sparsity of instances actually influencing the learning of a robotic system.
 \end{itemize}
 The outline of the document is the following. First, the popular Q-learning algorithm will be  defined. Next, a rendition of Q-learning called delayed Q-learning will be presented with a proof sketch showing that it is Probably Approximately Correct in Markov Decision Processes (i.e. PAC-MDP), which is a slightly different notion from general PAC learnability (more on this later). It will then be discussed how Q-learning is handled in continuous state/action spaces, which is relevant to robotics applications since modeling is generally done so in a continuous setting. An algorithm called the wire fitted neural network (WNN) will be presented with a proof that this approach is indeed PAC learnable. Closing the document is an implementation of this algorithm on a simple system.
+
+\section{Notation and Assumptions}
+
+
+
+
+
+
+
 \section{Reinforcement Learning}
 Define reinforcement learning. Talk about exploitation vs exploration.  Define MDPs. Define a policy.  Quantify a policy through its policy value. Definition of optimal policy. State action value function.
 \\
@@ -164,7 +173,7 @@ As we have discussed, in traditional Q-learning, the state and action spaces of 
 
 Generalization can be introduced by mapping states to action-values via a function approximator.  Several existing systems use a neural network as the function approximator \cite{lin} \cite{deep_rl} \cite{gaskett_thesis}. In \cite{lin} and \cite{deep_rl}, each possible action has an associated neural network which approximates the reward of executing that action from the state input to the neural net.  
 
-In addition to continous state representations, real robots benefit from a continuous control space.  Like the state space, actions can be discretized with the same drawbacks: high memory use and poor generalization.  Furthermore, using continuous actions gives more accurate and predictable movement, reduces wear, and improves energy consumption in practice\cite{gaskett_thesis}.  There exists a number of approaches for incorporating both continous state and action spaces into Q-learning.  In \cite{gaskett_thesis}, a single neural network is used, where the outputs correspond to control points of an action-reward interpolator.  The Q-value of any given action can be smoothly, approximately computed using the interpolator. \cite{carden2014} uses Nadaraya-Watson kernel regression \cite{} to estimate the Q-value of a state-action pair based on past experiences and shows convergence to the true Q-values within some tolerance with probability 1.  
+In addition to continous state representations, real robots benefit from a continuous control space.  Like the state space, discretization of actions has drawbacks: high memory use and poor generalization.  Furthermore, using continuous actions gives more accurate and predictable movement, reduces wear, and improves energy consumption in practice\cite{gaskett_thesis}.  There exists a number of approaches for incorporating both continous state and action spaces into Q-learning.  In \cite{gaskett_thesis}, a single neural network is used, where the outputs correspond to control points of an action-reward interpolator.  The Q-value of any given action can be smoothly, approximately computed using the interpolator. \cite{carden2014} uses Nadaraya-Watson kernel regression \cite{} to estimate the Q-value of a state-action pair based on past experiences and shows convergence to the true Q-values within some tolerance with probability 1.  
 
 \section{Discussion/Use of Neural Nets}
 \subsection{Learning Bounds on Neural Nets}
@@ -202,7 +211,6 @@ R(h) \leq \widehat{R}(h) + \sqrt{\frac{2log[\prod_{i=1}^l\prod_{i=1}^{d_i}(\frac
 $$
 
 
-\subsection{Implementation}
 \section{Conclusion}
 
 
