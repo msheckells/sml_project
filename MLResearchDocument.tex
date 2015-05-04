@@ -180,15 +180,32 @@ The input space $X = \mathbb{R}^d$, and in general a multilayer neural network w
 $$
 f(x) = f_l \circ \cdots \circ f_2 \circ f_1 (x)
 $$
+where
+$$
+f_i : \begin{cases}
+    \mathbb{R}^d_{i-1} \rightarrow \{-1,1\}^{d_i}, & \text{if 1 $\leq$ i $\leq$ $l$}.\\
+    \mathbb{R}^d_{i-1} \rightarrow \{-1,1\}, & \text{if i = $l$}
+  \end{cases}
+$$
+The notion of a component function will now be presented as
+$$
+f_{i,j}(x) = sgn(w_{i,j}^Tx - \theta_{i,j}) \in \{-1,1\}
+$$
+and $w_{i,j} \in \mathbb{R}^d_{i-1}$, $\theta_{i,j} \in \mathbb{R}$. The variable $d_{i-1}$ is the dimension of layer $i-1$.
 \\
-I STILL NEED TO ADD A BIT MORE
- Consider the function classes $F_1$ and $F_2$ as well as their Cartesian product $F_1 \times F_2$ and composition $F = F_1 \circ F_2$. The following lemmas will deem useful.
+\\
+The growth function is defined to be
+$$
+\Pi_H(m) \doteq FINISH
+$$
+where $H$ is a hypothesis class. In particular, let $H \rightarrow F$, and consider the function classes $F_1$ and $F_2$ as well as their Cartesian product $F_1 \times F_2$ and composition $F = F_1 \circ F_2$. The following lemmas will deem useful.
 \\
 \\
 \textbf{Growth Function Lemma 1}
 $$
 \Pi_F(m) \leq \Pi_{F_1}(m)\Pi_{F_2}(m)
 $$
+SHOW PROOF?
 \\
 \\
 \textbf{Growth Function Lemma 2}
@@ -197,6 +214,7 @@ $$
 $$
 where $F$ is the composition $F$ = $F_1 \circ F_2$.
 \\
+SHOW PROOF?
 \\
 Now consider the function composition
 $$
