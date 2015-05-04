@@ -191,19 +191,24 @@ The notion of a component function will now be presented as
 $$
 f_{i,j}(x) = sgn(w_{i,j}^Tx - \theta_{i,j}) \in \{-1,1\}
 $$
-and $w_{i,j} \in \mathbb{R}^d_{i-1}$, $\theta_{i,j} \in \mathbb{R}$. The variable $d_{i-1}$ is the dimension of layer $i-1$.
+and $x,w_{i,j} \in \mathbb{R}^d_{i-1}$, $\theta_{i,j} \in \mathbb{R}$. The variable $d_{i-1}$ is the dimension of layer $i-1$.
 \\
 \\
 The growth function is defined to be
 $$
-\Pi_H(m) \doteq FINISH
+\Pi_H(m) \doteq \max_{\{x_1,\cdots,x_m\} \subseteq X} |\{h(x_1),\cdots,h(x_m) : h \in H \} |
 $$
 where $H$ is a hypothesis class. In particular, let $H \rightarrow F$, and consider the function classes $F_1$ and $F_2$ as well as their Cartesian product $F_1 \times F_2$ and composition $F = F_1 \circ F_2$. The following lemmas will deem useful.
 \\
 \\
 \textbf{Sauer's Lemma}
 \\
-DEFINE SAUER'S LEMMA HERE
+Let $d$ = VCDim($H$), where $H$ is a hypothesis class. Then $\forall m \geq d$, the growth function is upper bounded as.
+$$
+\Pi_H(m) \leq \begin{pmatrix}
+\frac{m}{d}^de^d
+\end{pmatrix}
+$$
 \\
 \\
 \textbf{Growth Function Lemma 1}
@@ -244,7 +249,7 @@ Defining the variable $N$, which is the total number of parameters in the NN as
 $$
 N = \prod_{i=1}^l\prod_{i=1}^{d_i}(\frac{me}{d_{i-1}+1})^{d_{i-1}+1}
 $$ 
-gives a nicer (but looser) bounds on the growth function as
+gives a nicer (but looser) bound on the growth function as
 $$
 \Pi_H{(m)} = me^N
 $$
@@ -252,6 +257,7 @@ Thus we have with probability at least 1 - $\delta$
 $$
 R(h) \leq \widehat{R}(h) + \sqrt{\frac{2\log{me^N}}{m}} + \sqrt{\frac{\log{\frac{1}{\delta}}}{2m}}
 $$
+SHOW SAMPLE COMPLEXITY TOO?
 \subsection{Implementation}
 \section{Conclusion}
 
