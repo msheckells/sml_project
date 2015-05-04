@@ -230,29 +230,28 @@ This implies via Lemma 2
 \Pi_F(m) &\leq \prod_{i=1}^l \Pi_{F_i}(m)\\
 & \leq \prod_{i=1}^l\prod_{j=1}^{d_i} \Pi_{F_{i,j}}(m)\\
 \end{align*}
-Furthermore using Sauer's lemma
+Furthermore using Sauer's lemma on a component function gives
 \begin{align*}
 \Pi_F(m)& \leq \prod_{i=1}^l\prod_{j=1}^{d_i} \Pi_{F_{i,j}}(m)\\
 & \leq \prod_{i=1}^l\prod_{i=1}^{d_i}(\frac{me}{d_{i-1}+1})^{d_{i-1}+1}\\
 \end{align*}
-
+It well known that the VC dimension of halfspaces in $d$ dimensions is $d +1$, which is why $d+1$ manifests itself in Sauer's lemma.
 The generalization bound given in \cite{mohri_foundations_2012} is 
 $$
 R(h) \leq \widehat{R}(h) + \sqrt{\frac{2\log{\Pi_H{(m)}}}{m}} + \sqrt{\frac{\log{\frac{1}{\delta}}}{2m}}
 $$
-Thus we have with probability at least 1 - $\delta$
-$$
-R(h) \leq \widehat{R}(h) + \sqrt{\frac{2log[\prod_{i=1}^l\prod_{i=1}^{d_i}(\frac{me}{d_{i-1}+1})^{d_{i-1}+1}]}{m}} + \sqrt{\frac{\log{\frac{1}{\delta}}}{2m}} 
-$$
-Defining the variable $N$ as 
+Defining the variable $N$, which is the total number of parameters in the NN as 
 $$
 N = \prod_{i=1}^l\prod_{i=1}^{d_i}(\frac{me}{d_{i-1}+1})^{d_{i-1}+1}
 $$ 
-We get
+gives a nicer (but looser) bounds on the growth function as
 $$
-STUFF = Blah
+\Pi_H{(m)} = me^N
 $$
-
+Thus we have with probability at least 1 - $\delta$
+$$
+R(h) \leq \widehat{R}(h) + \sqrt{\frac{2\log{me^N}}{m}} + \sqrt{\frac{\log{\frac{1}{\delta}}}{2m}}
+$$
 \subsection{Implementation}
 \section{Conclusion}
 
