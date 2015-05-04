@@ -2,8 +2,8 @@
 % This is all preamble stuff that you don't have to worry about.
 % Head down to where it says "Start here"
 % --------------------------------------------------------------
-\documentclass[10pt]{article}
-\usepackage[margin=1in]{geometry}
+\documentclass{article} % For LaTeX2e
+\usepackage{nips14submit_e,times}
 \usepackage{amsmath,amsthm,amssymb}
 \usepackage{graphicx}
 \usepackage{caption}
@@ -29,16 +29,28 @@
 \item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
 \newenvironment{corollary}[2][Corollary]{\begin{trivlist}
 \item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
-\begin{document}
+
 % --------------------------------------------------------------
 % Start here
 % --------------------------------------------------------------
 \title{Applications of Reinforcement Learning in Robotics and Optimal Control}%replace X with the appropriate number
-\author{\\ %replace with your name
-Kristopher L. Reynolds\\
-Matthew C. Sheckells
-\\} %if necessary, replace with your course title
+
+\author{
+Matthew Sheckells\\
+Department of Computer Science\\
+Johns Hopkins University\\
+\And
+Kristopher Reynolds \\
+Department of Mechanical Engineering\\
+Johns Hopkins University\\
+}
+
+\nipsfinalcopy
+\begin{document}
+
+
 \maketitle
+
 \section{Introduction}
 Concepts of machine learning are very much at the forefront of modern research interests. However, the popular supervised learning framework does not account for environments that are constantly in flux. This setting is relevant to robotic vehicles navigating unknown terrains. A notion that suggests a means to handle these changing environments is reinforcement learning (RL). Unlike supervised learning, RL actively receives information by engaging an environment through \textit{actions}. By doing so, two types of information are rendered: the current \textit{state}, and some notion of a quantifiable \textit{reward}. This reward is related to an a priori defined task that has a corresponding goal. RL aims to learn reward values for taking a particular action from a particular state, so that a system can learn to act optimally in a given situation.
 
