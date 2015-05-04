@@ -168,7 +168,16 @@ In addition to continous state representations, real robots benefit from a conti
 
 \section{Discussion/Use of Neural Nets}
 \subsection{Learning Bounds on Neural Nets}
-Generalization bounds can be formulated for multilayered neural networks through inequalities involving the growth function $\Pi_F(m)$ where $F$ is a function class. Now consider the function classes $F_1$ and $F_2$ as well as their Cartesian product $F_1 \times F_2$ and composition $F = F_1 \circ F_2$. The following lemmas will deem useful.
+Generalization bounds can be formulated for multilayered neural networks (NN) through inequalities involving the growth function $\Pi_F(m)$ where $F$ is a function class. First some nomenclature for the NN classifier will be presented. Let $k$ denote the $k^{th}$ node in a neural network. For binary classification, the activation function $\sigma$ is defined as
+$$
+\sigma(t) = sgn(t)
+$$
+where
+$$
+t = w_k^Tx - \theta_k
+$$
+\\
+ Consider the function classes $F_1$ and $F_2$ as well as their Cartesian product $F_1 \times F_2$ and composition $F = F_1 \circ F_2$. The following lemmas will deem useful.
 \\
 \\
 \textbf{Growth Function Lemma 1}
