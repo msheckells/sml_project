@@ -12,7 +12,8 @@
 \usepackage{verbatim}
 \usepackage{color}
 \usepackage[toc,page]{appendix}
-
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 
 
 \newcommand{\N}{\mathbb{N}}
@@ -29,6 +30,8 @@
 \item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
 \newenvironment{corollary}[2][Corollary]{\begin{trivlist}
 \item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
 
 % --------------------------------------------------------------
 % Start here
@@ -60,7 +63,7 @@ The fields of robotics and optimal control have benefitted from concepts of rein
 \item Under-modeling and Uncertainty: The full state may not be observable, and noise requires some method of state estimation.
 \item Goal specification: Crafting reward functions (i.e. \textit{reward shaping}) may be difficult since rewards can rely upon successful completion of a task. This may lead to a sparsity of instances actually influencing the learning of a robotic system.
 \end{itemize}
-The outline of the document is the following. First, the popular Q-learning algorithm will be  defined. Next, a rendition of Q-learning called delayed Q-learning will be presented with a proof sketch showing that it is Probably Approximately Correct in Markov Decision Processes (i.e. PAC-MDP), which is a slightly different notion from general PAC learnability (more on this later). It will then be discussed how Q-learning is handled in continuous state/action spaces, which is relevant to robotics applications since modeling is generally done so in a continuous setting. An algorithm called the wire fitted neural network (WNN) will be presented with a proof that this approach is indeed PAC learnable. Closing the document is an implementation of this algorithm on a simple system.
+The outline of the document is the following. First, the popular Q-learning algorithm will be  defined. Next, a rendition of Q-learning called delayed Q-learning will be presented with a proof sketch showing that it is Probably Approximately Correct in Markov Decision Processes (i.e. PAC-MDP), which is a slightly different notion from general PAC learnability (more on this later). It will then be discussed how Q-learning is handled in continuous state/action spaces, which is relevant to robotics applications since modeling is generally done so in a continuous setting. An algorithm called the wire fitted neural network (WFNN) will be presented with a proof that this approach is indeed PAC learnable. 
 
 \section{Notation and Assumptions}
 
@@ -71,10 +74,9 @@ The outline of the document is the following. First, the popular Q-learning algo
 
 
 \section{Reinforcement Learning}
-Define reinforcement learning. Talk about exploitation vs exploration.  Define MDPs. Define a policy.  Quantify a policy through its policy value. Definition of optimal policy. State action value function.
-\\
-\\
-Reinforcement learning (RL) can be regarded as the collection of information through a course of actions via interaction with an environment, through which the current state and some immediate reward are received. The agent (learner) must deem whether it is more appropriate to explore further unknown states $s \in S$ and actions $a \in A$ or utilize the information already collected in order to optimize (maximize) the current reward $r(s,a)$. This tradeoff if formally referred to as \textit{exploration vs. expoitation}. RL differs from supervised learning in that there is no distribution from which samples (or features) are drawn. Rather it is through some \textit{policy} given as the mapping
+
+Reinforcement Learning (RL) has been defined as the study of planning and learning in a scenario where a learner actively interacts with the environment to achieve a certain goal \cite{mohri}. The learner, or agent, collects information through a course of actions by interacting with the environment.  The set of all possible actions is defined as $a \in A$ and the set of all possible states is $s \in S$. For each action that the agent takes, two pieces of information are obtained: a reward $r(s,a)$ for executing $a$ while in $s$, and a new state in the environment $s'$.  The objective of the agent is to choose actions which maximize its reward and hence help it achieve its goal.  Since the agent only receives rewards related to the action just taken, some other mechanism must be used to account for long-term reward feedback.
+The agent must deem whether it is more appropriate to explore further unknown states $s \in S$ and actions $a \in A$ or utilize the information already collected in order to optimize (maximize) the current reward $r(s,a)$. This tradeoff if formally referred to as \textit{exploration vs. expoitation}. RL differs from supervised learning in that there is no distribution from which samples (or features) are drawn. Rather it is through some \textit{policy} given as the mapping
 $$
 \pi : S \rightarrow A
 $$
@@ -82,20 +84,61 @@ that this distribution is defined. Another more intuitive concept of RL is that 
 $$
 V_{\pi} = E[\sum_{\tau = 0}^{T-t}r(s_{t+\tau},\pi(s_{t+\tau}))|s_t = s].
 $$
-Qualitatively, this policy value is the expected reward $r(s,a)$ parameterized by a state $s$ and action $a$ that is yielded when starting at $s$ using policy $\pi$. It is summed over a finite time horizon. The \textit{optimal policy} is in terms of the policy value, moreover $V^{*}=V_{\pi^*}(s) = \max_{\pi} V_{\pi}(s)$. Therefore $V^{*}$ is the optimal cummulative reward that the learner may expect to receive while starting at $s$. The next relevant quantity is the optimal state-action value function $Q^*(s)$, given in terms of the optimal policy value as
+Qualitatively, this policy value is the expected reward $r(s,a)$ parameterized by a state $s$ and action $a$ that is yielded when starting at $s$ using policy $\pi$. It is summed over a finite time horizon. The \textit{optimal policy} is in terms of the policy value, moreover $V^{*}=V_{\pi^*}(s) = \max_{\pi} V_{\pi}(s)$. Therefore $V^{*}$ is the optimal cummulative reward that the learner may expect to receive while starting at $s$. The next relevant quantity is the optimal state-action value function $Q^*(s)$, which is defined for all $(s,a) \in S \times A$ as the expected return for taking action $a$ at state $s$ and then following the optimal policy.  It is given in terms of the optimal policy value as
 $$
-Q^*(s,a) = E[r(s,a)] + \gamma \sum_{s' \in S}Pr[s' | s,a]V^*(s')
+Q^*(s,a) = E[r(s,a)] + \gamma \sum_{s' \in S}Pr[s' | s,a]V^*(s').
 $$
-The next section defines the Q-learning algorithm that seeks out this optimal state-action value function. 
-\section{Q-learning}
-Q-learning is an algorithm where the objective is to estimate the optimal state-action value function $Q^*$, when the model of interest is unknown. The optimal state-action value function can be defined implicitly as
+The optimal state-action value function can be defined implicitly as
 $$
 Q^*(s,a) = E_{s'}[r(s,a) + \gamma \max_{a \in A}Q^*(s,a)]
 $$
-\\
-\\
-A variant of the algorithm, called Delayed Q-learning, has been shown to by Probably Approximately Correct in Markov Decision Processes (PAC-MDP) \cite{strehl_pac_2006}.
+The optimal policy values are related to $Q^*(s,a)$ as 
+$$V^*(s) = \max_{a\in A} Q^*(s,a)$$
+and the optimal policy is given as 
+$$\pi^*(s) = \argmax_{a\in A} Q^*(s,a).$$
+Thus, some methods seek to approximate $Q^*$ by exploring the state-action space and thereby obtain $\pi^*$.
+The next section defines one such algorithm called Q-learning algorithm that seeks out this optimal state-action value function. 
+\section{Q-learning}
+Q-learning is an algorithm where the objective is to estimate the optimal state-action value function $Q^*$, when the model of the environment is unknown or changing. It consists of the following steps.  First, sample a new state $s'$ by executing action $a$.  Then, update the state-action value function using the following update:
+$$Q(s,a) \leftarrow \alpha Q(s,a) + (1-\alpha)[r(s,a) + \gamma \max_{a' \in A}Q(s', a')],$$
+where the parameter $\alpha$ is a function of the number of visits to state $s$ and $\gamma \in [0,1)$ is a factor used to discount future rewards.  A more detailed description of the procedure is shown in Algorithm \ref{qlearning}, where SelectAction($\pi,s$) must ensure that each state can be visited infinitely many times, like in an $\epsilon$-greedy approach.  That is, a random action is chosen with probability $\epsilon$, and the action is chosen as $\argmax_{a\in A} Q(s,a)$ with probability $1-\epsilon$.
+\begin{algorithm}
+ \caption{Q-learning}\label{euclid}
+  \begin{algorithmic}[1]
+    \Procedure{Q-learning}{$\pi$}
+      \State $Q\gets Q_0$
+      \For{\texttt{t=0; t<T; t++}} 
+        \State $s \gets $ SelectState($\pi,s$)
+        \For{each step of epoch $t$} 
+        	\State $a \gets$ SelectAction($\pi,s$)
+        	%\If{ \texttt{rand()} $< \epsilon$}
+        	%	\State $a \gets $\texttt{rand}$(A)$
+        	%\Else
+        	%	\State $a \gets \argmax_{a\in A} Q(s,a)$
+        	%\EndIf
+        	\State $r' \gets$ Reward($s,a$)
+        	\State $s' \gets$ NextState($s,a$)
+        	\State $Q(s,a) \gets Q(s,a) + \alpha[r' + \gamma\max_{a'}Q(s',a')-Q(s,a)]$
+        	\State $s \gets s'$
+        \EndFor
+      \EndFor
+      \State \Return{Q}
+    \EndProcedure
+  \end{algorithmic}
+  \label{qlearning}
+\end{algorithm}
+
+\subsection{Proof of Convergence of Q-learning}
+The Q-learning algorithm has been shown to converge to the optimal value $Q^*$ with probability one \cite{mohri}.  Here, we show an outline of the proof adapted from \cite{mohri}.  
+\begin{proof}
+Let $(Q_t(s,a))_{t\geq 0}$ denote the sequence of state-action value functions at $(s,a) \in S \times A$ generated by the algorithm.  By definition of the Q-learning updates,
+
+\end{proof}
+
+
 \section{Delayed Q-learning}
+A variant of the algorithm, called Delayed Q-learning, has been shown to by Probably Approximately Correct in Markov Decision Processes (PAC-MDP) \cite{strehl_pac_2006}.
+
 Delayed Q-learning differs from traditional Q-learning in a few ways.  Rather than updating the Q-values at every time step, the algorithm updates $Q(s,a)$ when a state-action pair $(s,a)$ has been executed $m$ times since its last update.  It also uses a different update function:
 $$Q_{t+1}(s,a) = \frac{1}{m}\sum_{i=1}^m(r_{k_i}+\gamma V_{k_i}(s_{k_i})) + \epsilon_1$$  
 where $r_i$ is the $i$th reward received and $s_{k_1},\dots,s_{k_m}$ are the $m$ most recent next-states observed form executing $(s,a)$ at times $k_1 < \dots < k_m = t$, respectively. The user defines $\epsilon_1$ and $m$.   
