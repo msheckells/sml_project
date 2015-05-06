@@ -70,15 +70,7 @@ The fields of robotics and optimal control have benefitted from concepts of rein
 
 The outline of the document is the following UPDATE THIS!!!. First, the popular Q-learning algorithm will be  defined. Next, a rendition of Q-learning called delayed Q-learning will be presented with a proof sketch showing that it is Probably Approximately Correct in Markov Decision Processes (i.e. PAC-MDP), which is a slightly different notion from general PAC learnability (more on this later). It will then be discussed how Q-learning is handled in continuous state/action spaces, which is relevant to robotics applications since modeling is generally done so in a continuous setting. An algorithm called the wire fitted neural network (WFNN) will be presented with a proof that this approach is indeed PAC learnable. 
 
-\section{Notation and Assumptions}
-
-
-
-
-
-
-
-\section{Reinforcement Learning}
+\section{Notation and Assumptions of Reinforcement Learning}
 
 Reinforcement Learning (RL) has been defined as the study of planning and learning in a scenario where a learner actively interacts with the environment to achieve a certain goal \cite{mohri}. The learner, or agent, collects information through a course of actions by interacting with the environment.  The set of all possible actions is defined as $a \in A$ and the set of all possible states is $s \in S$. For each action that the agent takes, two pieces of information are obtained: a reward $r(s,a)$ for executing $a$ while in $s$, and a new state in the environment $s'$.  The objective of the agent is to choose actions which maximize its reward and hence help it achieve its goal.  Since the agent only receives rewards related to the action just taken, some other mechanism must be used to account for long-term reward feedback.
 The agent must deem whether it is more appropriate to explore further unknown states $s \in S$ and actions $a \in A$ or utilize the information already collected in order to optimize (maximize) the current reward $r(s,a)$. This tradeoff if formally referred to as \textit{exploration vs. expoitation}. RL differs from supervised learning in that there is no distribution from which samples (or features) are drawn. Rather it is through some \textit{policy} given as the mapping
@@ -183,22 +175,7 @@ $H$ being a $\gamma$-contraction implies that it admits a fixed point $Q^*$ such
 
 \end{proof}
 
-%These convergence results make no
-%performance guarantee after only a finite amount of ex-
-%perience. Even-Dar and Mansour (2003) studied the
-%convergence rate of Q-learning. They showed that,
-%under a certain assumption, Q-learning converges to a
-%near-optimal value function in a polynomial number of
-%timesteps. The result requires input of an exploration
-%policy that, with high probability, tries every state-
-%action pair every
-%L
-%timesteps (for some polynomial
-%L
-%).
-%Such a policy may be hard to find in some MDPs and
-%is impossible in others. 
-
+These convergence results, however, make no guarantee about the performance of Q-learning in regard to the number of steps taken in the environment.  In the next section, we discuss an adaptation of Q-learning that provably converges to an $\epsilon$-optimal policy within some number of time steps that is polynomially bounded by the size of the action and state spaces and other relevant quantities.
 
 \section{Delayed Q-learning}
 A variant of Q-learning, called Delayed Q-learning, was the first to show that efficient RL is possible even when the model of the MDP is not known or learned.  Its creators proved it to be an RL equivalent of PAC, called Probably Approximately Correct in Markov Decision Processes (PAC-MDP) \cite{strehl_pac_2006}.  If an algorithm is PAC-MDP, then the number of timesteps that it takes for a policy to become $\epsilon$-optimal for all states should be less than some polynomial in the quantities $(\left|S\right|,\left|A\right|,1/\epsilon,1/\delta,1/(1-\gamma))$ with probability at least $1-\delta$ \cite{kakade}.
@@ -217,16 +194,22 @@ The full proof is complex, so we mention only the key insights.  The full proof 
 
 As noted previously, delaying updates for $m$ samples has an averaging effect.  This ensures with high probability that each update is a smart thing to do.  Furthermore, we expect an attempted update of $Q(s,a)$ to succeed so long as it is very inconsistent with the other value function estimates.  By starting with high initial estimates for the Q-values and only allowing them to decrease, the algorithm ensures that each state-action pair will be sampled enough times for its Q-value to converge.  Once the estimate becomes $\epsilon$-close to its true value, the algorithm has a mechanism to turn off the learning of a particular state-action pair.  This guarantees that only a finite number of Q-value updates occur.  The proof uses these key properties of the algorithm to that Delayed Q-learning will follow an $\epsilon$-optimal policy on all but $$O\left(\frac{SA}{\epsilon^4(1-\gamma)^8}\ln{\frac{1}{\delta}}\ln{\frac{1}{\epsilon(1-\gamma)}}\ln{\frac{SA}{\delta\epsilon(1-\gamma)}}\right)$$ steps with probability at least $1-\delta$ for a particular choice of $m$ which minimizes the bound.
 
-\section{Q-learning with Continuous States and Actions}
+\section{Q-learning in Robotics}
+Robotic systems are a central application area of Q-learning.  The following sections discuss the key challenges of applying Q-learning to the control of robotic systems.  In particular, we discuss how Q-learning has been adapted to work in continuos state and action spaces and how rewards are typically defined to achieve optimal control. 
+
+\subsection{Q-learning with Continuous States and Actions}
 As we have discussed, in traditional Q-learning, the state and action spaces of a system are discretized and finite, with a single Q-value assigned to each state-action pair.  Since robots act in the real world where measurements are continuously valued, it is more natural to represent states in a continuous domain.  Moreover, this alleviates any issues with perceptual aliasing, where two similar different states are considered the same in a discretized space.  One could attempt to approximate a continuous space by finely discretizing it, but this increases the amount of memory required to store $Q$-values and the learning time for Q-learning becomes intractable.  In addition, in a grid-based representation there is no notion of similarity between neighboring states, so discrete representations do not generalize well.  
 
 Generalization can be introduced by mapping states to action-values via a function approximator.  Several existing systems use a neural network as the function approximator \cite{lin} \cite{deep_rl} \cite{gaskett_thesis} with success. In \cite{lin} and \cite{deep_rl}, each possible action has an associated neural network which approximates the reward of executing that action from the state input to the neural net.  The neural networks were trained to output the correct action-values based on the rewards received from acting in the environment.  
 
 These methods still, however, rely on a discretized action space.  This means that an agent can only act in a finite number of predetermined ways, meaning its chances of acting optimally (with respect to the underlying continuous action space) is small.  Like the state space, discretizing the action space has its drawbacks: high memory use and poor generalization.  Furthermore, using continuous actions gives more accurate and predictable movement, reduces wear, and improves energy consumption in practice\cite{gaskett_thesis}. 
 
-There exists a number of approaches for incorporating both continous state and action spaces into Q-learning.  In \cite{takahashi}, states and actions are coarsely discretized, and linear interpolation is used to represent intermediate states.  In \cite{gaskett_thesis}, a single neural network takes the curren state as input, and the outputs correspond to control points of an action-reward interpolator.  The Q-value of any given action can be smoothly, approximately computed using the interpolator. There are also actor-critic methods (EXPLAIN).  \cite{carden2014} uses Nadaraya-Watson kernel regression \cite{nadaraya} to estimate the Q-value of a state-action pair based on past experiences and shows convergence to the true Q-values within some tolerance with probability 1.  
+There exists a number of approaches for incorporating both continous state and action spaces into Q-learning.  In \cite{takahashi}, states and actions are coarsely discretized, and linear interpolation is used to represent intermediate states.  In \cite{gaskett_thesis}, a single neural network takes the curren state as input, and the outputs correspond to control points of an action-reward interpolator.  The Q-value of any given action can be smoothly, approximately computed using the interpolator.  
 
-\section{Discussion/Use of Neural Nets}
+Actor-critic methods contain two separate, interacting subsystems.  One estimates the long-term utility for each state and the other learns to choose the optimal action in each state.  \cite{bhasin_reinforcement_2011} describes such a system for RL-based optimal control of uncertain nonlinear systems, where the actor and critic each consist of a neural network.  Since neural networks are so widely adopted in RL, we show proof that they are PAC-learnable, and hence a good choice of function approximator, in Section 5.2.
+
+\cite{carden2014} uses Nadaraya-Watson kernel regression \cite{nadaraya} to estimate the Q-value of a state-action pair based on past experiences and shows convergence to the true Q-values within some tolerance with probability 1.  This type of regression estimates the value at a particular point as a weighted average of nearby observations using non-negative kernel function to assign weights to observations.  Its proof of convergence is quite technical, so we briefly discuss the key details.  It follows very similarly to proof of convergence for traditional Q-learning given by Watkins \cite{watkins}, which uses an artifically controlled finite-length MDP called an Action-Replay Process (ARP) for the purposes of the proof.  The action space of the ARP is equivalent to that of the actual process MDP and the state space of the ARP is built from the state space of the actual MDP.   The ARP replays sequences of actions in such way so that the optimal Q-values are known for the ARP. Watkins shows that as the length of the ARP approaches infinity, the ARP's transition probabilties and expected rewards  converge to those of the real process.  In addition, bounds put on the learning rate (the sum of rates must tend to inifinity while the sum of squares of rates must be less than inifinity) ensure this convergence with probability one.  Since the ARP tends towards the real process, so do its optimal Q-values.  \cite{carden2014} makes an additional step and shows that the expected rewards for the ARP are equivalent to the kernel regression estimates. 
+
 \subsection{Learning Bounds on Neural Nets}
 Generalization bounds can be formulated for multilayered neural networks (NN) through inequalities involving the growth function $\Pi_F(m)$, where $F$ is a function class. First some nomenclature for the NN classifier will be presented. Let $k$ denote the $k^{th}$ node in a neural network. For binary classification, the activation function $\sigma$ is defined as
 $$
@@ -310,6 +293,11 @@ Thus we have with probability at least 1 - $\delta$
 $$
 R(h) \leq \widehat{R}(h) + \sqrt{\frac{2\log{me^N}}{m}} + \sqrt{\frac{\log{\frac{1}{\delta}}}{2m}}
 $$
+
+\subsection{Reward Crafting for Optimal Control}
+Optimal control theory deals with deriving control policies which aim to minimize some cost specified by the user.  This is rather similar to goal of Q-learning which aims to maximize the reward received by an agent over some time-horizon.  In fact, \cite{sutton} claims that reinforcement learning is equivalent to direct adaptive optimal control.  When an accurate model of the system to be controlled is not available, adaptive optimal control methods can be applied to trajectory tracking and optimal control scenarios.  In optimal control a cost is typically given as 
+$$J = \phi(x(t_f),t_f) + \int_{t_0}^{t_f} L(x(t),u(t),t)dt$$
+where $x(t)$ is the state trajectory, $u(t)$ is the control sequence, and $\phi$ is a terminal cost.  An equivalent RL reward can be given as $-J$.  A natural choice for $L$ then is $L = \frac{1}{2}x(t)^TQx(t) + u(t)^TRu(t)$, where $Q$ and $R$ are positive definite matrices.  This quadratic cost is often associated with the Linear Quadratic Regulator (LQR) \cite{lqr} and is employed by Ng \cite{ng_autonomous_2006} for RL-based stabilization of an autonomous helicopter.  This choice of reward encourages the system to remain close to the origin (i.e. stabilizes the system) while also encouraging small control outputs and smooth control transitions.  Ng also discusses in \cite{ng_thesis} a potential-based method for specifying rewards that can lead to significant speedups of the learning process.
 
 \section{Conclusion}
 This investigation of RL in the context of robotics and optimal control has further influenced the research areas of the authors of this document. Through the presentation/discovery of tractable RL algorithms, it now seems feasible that some of these techniques may be approrpiate for solving problems of motion planning, state estimation, trajectory generation, and navigation all of which are native to the RPK (Chirikjian) and the ASCO (Kobilarov) labs at Johns Hopkins University.
