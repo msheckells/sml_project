@@ -57,16 +57,16 @@ Johns Hopkins University\\
 \maketitle
 
 \section{Introduction}
-Concepts of machine learning are very much at the forefront of modern research interests. However, the popular supervised learning framework does not account for environments that are constantly in flux. This setting is relevant to robotic vehicles navigating unknown terrains. A notion that suggests a means to handle these changing environments is reinforcement learning (RL). Unlike supervised learning, RL actively receives information by engaging an environment through \textit{actions}. By doing so, two types of information are rendered: the current \textit{state}, and some notion of a quantifiable \textit{reward}. This reward is related to an a priori defined task that has a corresponding goal. RL aims to learn reward values for taking a particular action from a particular state, so that a system can learn to act optimally in a given situation.
+Concepts of machine learning are very much at the forefront of modern research interests. However, the popular supervised learning framework does not account for environments that are constantly in flux. This setting is relevant in particular to robotic vehicles navigating unknown terrains. A notion that suggests a means to handle these changing environments is reinforcement learning (RL). Unlike supervised learning, RL actively receives information by engaging an environment through \textit{actions}. By doing so, two types of information are rendered: the current \textit{state}, and some notion of a quantifiable \textit{reward}. This reward is related to an a priori defined task that has a corresponding goal. RL aims to learn reward values for taking an action from a particular state, so that a system can learn to act optimally in a given situation.
 
-The fields of robotics and optimal control have benefitted from concepts of reinforcement learning \cite{kober_reinforcement_2013}\cite{kaelbling_reinforcement_1996}. Several robotic systems in  \cite{bhasin_reinforcement_2011} and \cite{hester_rtmba:_2012} have implemented this technique, showing that performance equalled and in some cases exceeded that of hand-tuned controllers. The advantage of RL is that it is robust to changes in a system, such as malfunctioning actuators, changes in models parameters, and external disturbances. Optimal control is similar in several ways to RL. Moreover, both have some notion of finding a \textit{policy} that optimizes some objective function. For optimal control, this is minimizing some cost, whereas for RL, it is maximizing a reward. For robotics-based RL, there are several challenges that need to be addressed for RL to be realized.
+The fields of robotics and optimal control have benefitted from concepts of reinforcement learning \cite{kober_reinforcement_2013}\cite{kaelbling_reinforcement_1996}. Several robotic systems in  \cite{bhasin_reinforcement_2011} and \cite{hester_rtmba:_2012} have implemented this technique, showing that performance equalled and in some cases exceeded that of hand-tuned controllers. The advantage of RL is that it is robust to changes in a system, such as malfunctioning actuators, changes in models parameters, and external disturbances. Optimal control is similar in several ways to RL. Moreover, both have some notion of finding a \textit{policy} that optimizes some objective function. For optimal control, this is minimizing some cost, whereas for RL, it is maximizing a reward. For robotics-based RL, there are several challenges that need to be addressed in order for RL to be realized.
 \begin{itemize}
 \item Continuous State and Action Space: Robots have sensors that output data in a continuous domain.  Likewise, robots themselves act in a continuous environment. This issue is addressed in \cite{gaskett_thesis} and \cite{q_learning_navigation}.
 \item Under-modeling and Uncertainty: The full state may not be observable, and noise requires some method of state estimation.
 \item Goal specification: Crafting reward functions (i.e. \textit{reward shaping}) may be difficult since rewards can rely upon successful completion of a task. This may lead to a sparsity of instances actually influencing the learning of a robotic system.
 \end{itemize}
 
-The outline of the document is the following. First, the popular Q-learning algorithm will be  defined. Next, a rendition of Q-learning called delayed Q-learning will be presented with a proof sketch showing that it is Probably Approximately Correct in Markov Decision Processes (i.e. PAC-MDP), which is a slightly different notion from general PAC learnability (more on this later). It will then be discussed how Q-learning is handled in continuous state/action spaces, which is relevant to robotics applications since modeling is generally done so in a continuous setting. An algorithm called the wire fitted neural network (WFNN) will be presented with a proof that this approach is indeed PAC learnable. 
+The outline of the document is the following UPDATE THIS!!!. First, the popular Q-learning algorithm will be  defined. Next, a rendition of Q-learning called delayed Q-learning will be presented with a proof sketch showing that it is Probably Approximately Correct in Markov Decision Processes (i.e. PAC-MDP), which is a slightly different notion from general PAC learnability (more on this later). It will then be discussed how Q-learning is handled in continuous state/action spaces, which is relevant to robotics applications since modeling is generally done so in a continuous setting. An algorithm called the wire fitted neural network (WFNN) will be presented with a proof that this approach is indeed PAC learnable. 
 
 \section{Notation and Assumptions}
 
@@ -267,7 +267,7 @@ In addition to continous state representations, real robots benefit from a conti
 
 \section{Discussion/Use of Neural Nets}
 \subsection{Learning Bounds on Neural Nets}
-Generalization bounds can be formulated for multilayered neural networks (NN) through inequalities involving the growth function $\Pi_F(m)$ where $F$ is a function class. First some nomenclature for the NN classifier will be presented. Let $k$ denote the $k^{th}$ node in a neural network. For binary classification, the activation function $\sigma$ is defined as
+Generalization bounds can be formulated for multilayered neural networks (NN) through inequalities involving the growth function $\Pi_F(m)$, where $F$ is a function class. First some nomenclature for the NN classifier will be presented. Let $k$ denote the $k^{th}$ node in a neural network. For binary classification, the activation function $\sigma$ is defined as
 $$
 \sigma(t) = sgn(t)
 $$
@@ -316,11 +316,12 @@ $$
 $$
 where $F$ is the composition $F$ = $F_1 \circ F_2$.
 \\
+\\
 Now consider the function composition
 $$
 F = F_l \circ F_{l-1} \circ \cdots F_2 \circ F_1
 $$
-This implies via Lemma 2
+This implies via the above growth function lemma
 
 \begin{align*}
 \Pi_F(m) &\leq \prod_{i=1}^l \Pi_{F_i}(m)\\
@@ -350,7 +351,7 @@ R(h) \leq \widehat{R}(h) + \sqrt{\frac{2\log{me^N}}{m}} + \sqrt{\frac{\log{\frac
 $$
 
 \section{Conclusion}
-
+This investigation of RL in the context of robotics and optimal control has further influenced the research areas of the authors of this document. Through the presentation/discovery of tractable RL algorithms, it now seems feasible that some of these techniques may be approrpiate for solving problems of motion planning, state estimation, trajectory generation, and navigation all of which are native to the RPK (Chirikjian) and the ASCO (Kobilarov) labs at Johns Hopkins University.
 
 
 \nocite{yang_multiagent_2004}
