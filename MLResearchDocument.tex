@@ -37,7 +37,7 @@
 % --------------------------------------------------------------
 % Start here
 % --------------------------------------------------------------
-\title{Applications of Reinforcement Learning in Robotics and Optimal Control}%replace X with the appropriate number
+\title{Reinforcement Learning in Robotics and Optimal Control}%replace X with the appropriate number
 
 \author{
 Matthew Sheckells\\
@@ -139,89 +139,48 @@ Let $(Q_t(s,a))_{t\geq 0}$ denote the sequence of state-action value functions a
 
 \end{proof}
 
+%These convergence results make no
+%performance guarantee after only a finite amount of ex-
+%perience. Even-Dar and Mansour (2003) studied the
+%convergence rate of Q-learning. They showed that,
+%under a certain assumption, Q-learning converges to a
+%near-optimal value function in a polynomial number of
+%timesteps. The result requires input of an exploration
+%policy that, with high probability, tries every state-
+%action pair every
+%L
+%timesteps (for some polynomial
+%L
+%).
+%Such a policy may be hard to find in some MDPs and
+%is impossible in others. 
+
 
 \section{Delayed Q-learning}
-A variant of the algorithm, called Delayed Q-learning, has been shown to by Probably Approximately Correct in Markov Decision Processes (PAC-MDP) \cite{strehl_pac_2006}.
+A variant of Q-learning, called Delayed Q-learning, was the first to show that efficient RL is possible even when the model of the MDP is not known or learned.  Its creators proved it to be an RL equivalent of PAC, called Probably Approximately Correct in Markov Decision Processes (PAC-MDP) \cite{strehl_pac_2006}.  If an algorithm is PAC-MDP, then the number of timesteps that it takes for a policy to become $\epsilon$-optimal for all states should be less than some polynomial in the quantities $(\left|S\right|,\left|A\right|,1/\epsilon,1/\delta,1/(1-\gamma))$ with probability at least $1-\delta$ \cite{kakade}.
 
 
 Delayed Q-learning differs from traditional Q-learning in a few ways.  Rather than updating the Q-values at every time step, the algorithm updates $Q(s,a)$ when a state-action pair $(s,a)$ has been executed $m$ times since its last update.  It also uses a different update function:
 $$Q_{t+1}(s,a) = \frac{1}{m}\sum_{i=1}^m(r_{k_i}+\gamma V_{k_i}(s_{k_i})) + \epsilon_1$$  
-where $r_i$ is the $i$th reward received and $s_{k_1},\dots,s_{k_m}$ are the $m$ most recent next-states observed form executing $(s,a)$ at times $k_1 < \dots < k_m = t$, respectively. The user defines $\epsilon_1$ and $m$.   
-% We will have some of these vars defined from earlier so I want define them all here
-After $m$ executions of $(s,a)$ an update will only occur if the new Q-value estimate is at least $\epsilon_1$ smaller than the previous estimate.  If it is not smaller, then updates of $Q(s,a)$ are no longer allowed until another Q-value estimate (for a different state-action pair) is updated.
+where $r_i$ is the $i$th reward received and $s_{k_1},\dots,s_{k_m}$ are the $m$ most recent next-states observed form executing $(s,a)$ at times $k_1 < \dots < k_m = t$, respectively. The user defines $\epsilon_1$ and $m$.  After $m$ executions of $(s,a)$ an update will only occur if the new Q-value estimate is at least $\epsilon_1$ smaller than the previous estimate.  If it is not smaller, then updates of $Q(s,a)$ are no longer allowed until another Q-value estimate (for a different state-action pair) is updated.  When the algorithm begins, $Q(s,a)$ is initialized to $1/(1-\gamma)$.
 
-Waiting for $m$ samples before updating has an averaging effect that helps minimize any randomness. Adding $\epsilon_1$ to the update function helps achieve optimism which in turn facilitates safe exploration. By starting with high initial Q-values and only allowing Q-values to decrease ensures that each state is regularly visited and that each action is tried from every state.  This makes sure each state-action pair receives enough samples to converge to the correct Q-value.%<- discuss optimism more?
-In the following section, we outline the proof that shows Delayed Q-learning is PAC-MDP.
+Waiting for $m$ samples before updating has an averaging effect that helps minimize any randomness. Adding $\epsilon_1$ to the update function encourages optimistic Q-value estimates which in turn facilitates safe exploration. By starting with high initial Q-values and only allowing Q-values to decrease ensures that each state is regularly visited and that each action is tried from every state.  This makes sure each state-action pair receives enough samples to converge to the correct Q-value.  In the following section, we outline the proof that shows Delayed Q-learning is PAC-MDP.
 
 
-\subsubsection{Proof Sketch: Delayed Q-learning is PAC-MDP}
+\subsection{Proof Sketch: Delayed Q-learning is PAC-MDP}
 
-Should probably explain how PAC-MDP is different than PAC?
+The full proof is complex, so we mention only the key insights.  The full proof can be found in \cite{strehl_pac_2006}.  
 
+As noted previously, delaying updates for $m$ samples has an averaging effect.  This ensures with high probability that each update is a smart thing to do.  Furthermore, we expect an attempted update of $Q(s,a)$ to succeed so long as it is very inconsistent with the other value function estimates.  By starting with high initial estimates for the Q-values and only allowing them to decrease, the algorithm ensures that each state-action pair will be sampled enough times for its Q-value to converge.  Once the estimate becomes $\epsilon$-close to its true value, the algorithm has a mechanism to turn off the learning of a particular state-action pair.  This guarantees that only a finite number of Q-value updates occur.  The proof uses these key properties of the algorithm to that Delayed Q-learning will follow an $\epsilon$-optimal policy on all but $$O\left(\frac{SA}{\epsilon^4(1-\gamma)^8}\ln{\frac{1}{\delta}}\ln{\frac{1}{\epsilon(1-\gamma)}}\ln{\frac{SA}{\delta\epsilon(1-\gamma)}}\right)$$ steps with probability at least $1-\delta$ for a particular choice of $m$ which minimizes the bound.
 
-The number of successful Q-value updates for a particular $(s,a)$ is bounded by
-
-$$\kappa = \frac{1}{(1-\gamma)\epsilon_1}.$$
-
-This follows from the fact that $Q(s,a)$ is initialized to $1/(1-\gamma)$ and that every $Q(s,a)$ results in a decrease of at least $\epsilon_1$ (and it is assumed rewards are non-negative).  For $A$ total actions and $S$ total states, at most $SA\kappa$ updates can occur.  Now, a state-action pair $(s,a)$ is initially allowed to attempt an update.  Then, a successful update of at most one other Q-value must occur  for $(s,a)$ to attempt another update.  So, there can be at most $1+SA\kappa$ attempted updates of $(s,a)$.  Therefore, there are at most
-$$SA(1+SA\kappa)$$
-total attempted updates.
-
-During timestep $t$ of learning define $K_t$ to be the set of all state-action pairs $(s,a)$ such that 
-
-$$Q_t(s,a) - \left(R(s,a)+\gamma\sum_{s'}T(s'|s,a)V_t(s')\right) \leq 3\epsilon_1.$$
-
-A value for $m$ is specified as 
-
-$$m=\frac{\ln{3SA(1+SA\kappa)/\delta}}{2\epsilon_1^2(1-\gamma)^2}.$$
-
-Strehl et al. prove the following lemmas:
-
-\begin{enumerate}
-
-\item Consider the following assumption:  Suppose an attempted update of state-action pair $(s,a)$ occurs at time $t$, and that the $m$ most recent experiences of $(s,a)$ happened at times $k_1 < \dots < k_m = t$.  If $(s,a) \notin K_{k_1}$, then the attempted update will be successful.  The probability that this assumption is violated is at most $\delta/3$.  
-
-% A proof sketch is given for this in Strehl
-
-\item During the execution of Delayed Q-learning, $Q_t(s,a) \geq Q^*(s,a)$ holds for all timesteps $t$ and state-action pairs $(s,a)$ with probability at least $1-\delta/3$.
-
-\item The number of timesteps $t$ such that a state-action pair $(s,a) \notin K_t$ is experienced is at most $2mSA\kappa$.
-
-\item Let $M$ be an MDP, $K$ a set of state-action pairs, $M'$ an MDP equal to $M$ on $K$ (identical transition and reward functions), $\pi$ a policy, and
-$T$ some positive integer. Let $A_M$ be the event that a state-action pair not in $K$ is encountered in a trial generated by starting from state $s$ and following $\pi$ for $T$ timesteps in $M$. Then,
-$$V_M^\pi(s,T)\geq V_{M'}^{\pi}(s,T)-\text{Pr}(A_M)/(1-\gamma).$$
-
-\end{enumerate}
-
-Suppose Delayed Q-learning is run on an MDP $M$. It is assumed that the assumption in lemma 1 holds and that $Q_t(s,a) \geq Q^*(s,a)$.  These assumptions are broken with probability at most $2\delta/3$ by lemmas 1 and 2.  
-Let $T=O\left(\frac{1}{1-\gamma}\ln{\frac{1}{\epsilon_2(1-\gamma)}}\right)$ be large enough so that $|V_{M'}^{\pi_t}(s_t,T) - V_{M'}^{\pi_t}(s_t)| \leq \epsilon_2$.   Let $\text{Pr}(U)$ denote the probability of
-the algorithm performing a successful update on some
-state-action pair $(s, a)$, while executing policy
-$\mathcal{A}_t$ from state $s_t$ in $M$ for $T$ timesteps. From the previous statements and lemma 5 we have 
-\begin{align*}
-V_M^{\mathcal{A}_t} & \geq V_{M'}^{\mathcal{A}_t}(s_t,T)-\text{Pr}(A_M)/(1-\gamma) \\
- & \geq V_{M'}^{\pi_t}(s_t,T)-\text{Pr}(A_M)/(1-\gamma) -\text{Pr}(U)/(1-\gamma) \\
- & \geq V_{M'}^{\pi_t}(s_t)-\epsilon_2-(\text{Pr}(A_M)/(1-\gamma) +\text{Pr}(U)/(1-\gamma)). 
-\end{align*}
-
-
-
-More steps to be explained in between....
-
-The number of timesteps needed for 
-$$V_{\mathcal{A}_t}^{\pi_t}(s_t,T) \geq V^*(s_t)-\epsilon$$
-is 
-$$O\left(\frac{SA}{\epsilon^4(1-\gamma)^8}\ln{\frac{1}{\delta}}\ln{\frac{1}{\epsilon(1-\gamma)}}\ln{\frac{SA}{\delta\epsilon(1-\gamma)}}\right)$$
-So, Delayed Q-learning will follow an $\epsilon$-optimal policy on all but $O\left(\frac{SA}{\epsilon^4(1-\gamma)^8}\ln{\frac{1}{\delta}}\ln{\frac{1}{\epsilon(1-\gamma)}}\ln{\frac{SA}{\delta\epsilon(1-\gamma)}}\right)$ steps with probability at least $1-\delta$.  Thus, it is PAC-MDP.
-\\ 
-\\
-$R_{max}$ is another reinforcement learning algorithm proved to be PAC-MDP that we can discuss.
 \section{Q-learning with Continuous States and Actions}
-As we have discussed, in traditional Q-learning, the state and action spaces of a system are discretized and finite, with a single $Q$-value assigned to each state-action pair.  Since robots act in the real world where measurements are continuously valued, it is more natural to represent states in a continuous domain.  This alleviates any issues with perceptual aliasing.  One could attempt to approximate a continuous space by finely discretizing it, but this increases the amount of memory required to store $Q$-values and the learning time becomes intractable.  In a grid-based representation, there is no notion of similarity between neighboring states, so discrete representations do not generalize well.  
+As we have discussed, in traditional Q-learning, the state and action spaces of a system are discretized and finite, with a single Q-value assigned to each state-action pair.  Since robots act in the real world where measurements are continuously valued, it is more natural to represent states in a continuous domain.  Moreover, this alleviates any issues with perceptual aliasing, where two similar different states are considered the same in a discretized space.  One could attempt to approximate a continuous space by finely discretizing it, but this increases the amount of memory required to store $Q$-values and the learning time for Q-learning becomes intractable.  In addition, in a grid-based representation there is no notion of similarity between neighboring states, so discrete representations do not generalize well.  
 
-Generalization can be introduced by mapping states to action-values via a function approximator.  Several existing systems use a neural network as the function approximator \cite{lin} \cite{deep_rl} \cite{gaskett_thesis}. In \cite{lin} and \cite{deep_rl}, each possible action has an associated neural network which approximates the reward of executing that action from the state input to the neural net.  
+Generalization can be introduced by mapping states to action-values via a function approximator.  Several existing systems use a neural network as the function approximator \cite{lin} \cite{deep_rl} \cite{gaskett_thesis} with success. In \cite{lin} and \cite{deep_rl}, each possible action has an associated neural network which approximates the reward of executing that action from the state input to the neural net.  The neural networks were trained to output the correct action-values based on the rewards received from acting in the environment.  
 
-In addition to continous state representations, real robots benefit from a continuous control space.  Like the state space, actions can be discretized with the same drawbacks: high memory use and poor generalization.  Furthermore, using continuous actions gives more accurate and predictable movement, reduces wear, and improves energy consumption in practice\cite{gaskett_thesis}.  There exists a number of approaches for incorporating both continous state and action spaces into Q-learning.  In \cite{gaskett_thesis}, a single neural network is used, where the outputs correspond to control points of an action-reward interpolator.  The Q-value of any given action can be smoothly, approximately computed using the interpolator. \cite{carden2014} uses Nadaraya-Watson kernel regression \cite{} to estimate the Q-value of a state-action pair based on past experiences and shows convergence to the true Q-values within some tolerance with probability 1.  
+These methods still, however, rely on a discretized action space.  This means that an agent can only act in a finite number of predetermined ways, meaning its chances of acting optimally (with respect to the underlying continuous action space) is small.  Like the state space, discretizing the action space has its drawbacks: high memory use and poor generalization.  Furthermore, using continuous actions gives more accurate and predictable movement, reduces wear, and improves energy consumption in practice\cite{gaskett_thesis}. 
+
+There exists a number of approaches for incorporating both continous state and action spaces into Q-learning.  In \cite{takahashi}, states and actions are coarsely discretized, and linear interpolation is used to represent intermediate states.  In \cite{gaskett_thesis}, a single neural network takes the curren state as input, and the outputs correspond to control points of an action-reward interpolator.  The Q-value of any given action can be smoothly, approximately computed using the interpolator. There are also actor-critic methods (EXPLAIN).  \cite{carden2014} uses Nadaraya-Watson kernel regression \cite{nadaraya} to estimate the Q-value of a state-action pair based on past experiences and shows convergence to the true Q-values within some tolerance with probability 1.  
 
 \section{Discussion/Use of Neural Nets}
 \subsection{Learning Bounds on Neural Nets}
