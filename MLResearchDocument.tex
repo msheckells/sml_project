@@ -59,16 +59,16 @@ Johns Hopkins University\\
 \maketitle
 
 \section{Introduction}
-Concepts of machine learning are very much at the forefront of modern research interests. However, the popular supervised learning framework does not account for environments that are constantly in flux. This setting is relevant to robotic vehicles navigating unknown terrains. A notion that suggests a means to handle these changing environments is reinforcement learning (RL). Unlike supervised learning, RL actively receives information by engaging an environment through \textit{actions}. By doing so, two types of information are rendered: the current \textit{state}, and some notion of a quantifiable \textit{reward}. This reward is related to an a priori defined task that has a corresponding goal. RL aims to learn reward values for taking a particular action from a particular state, so that a system can learn to act optimally in a given situation.
+Concepts of machine learning are very much at the forefront of modern research interests. However, the popular supervised learning framework does not account for environments that are constantly in flux. This setting is relevant in particular to robotic vehicles navigating unknown terrains. A notion that suggests a means to handle these changing environments is reinforcement learning (RL). Unlike supervised learning, RL actively receives information by engaging an environment through \textit{actions}. By doing so, two types of information are rendered: the current \textit{state}, and some notion of a quantifiable \textit{reward}. This reward is related to an a priori defined task that has a corresponding goal. RL aims to learn reward values for taking an action from a particular state, so that a system can learn to act optimally in a given situation.
 
-The fields of robotics and optimal control have benefitted from concepts of reinforcement learning \cite{kober_reinforcement_2013}\cite{kaelbling_reinforcement_1996}. Several robotic systems in  \cite{bhasin_reinforcement_2011} and \cite{hester_rtmba:_2012} have implemented this technique, showing that performance equalled and in some cases exceeded that of hand-tuned controllers. The advantage of RL is that it is robust to changes in a system, such as malfunctioning actuators, changes in models parameters, and external disturbances. Optimal control is similar in several ways to RL. Moreover, both have some notion of finding a \textit{policy} that optimizes some objective function. For optimal control, this is minimizing some cost, whereas for RL, it is maximizing a reward. For robotics-based RL, there are several challenges that need to be addressed for RL to be realized.
+The fields of robotics and optimal control have benefitted from concepts of reinforcement learning \cite{kober_reinforcement_2013}\cite{kaelbling_reinforcement_1996}. Several robotic systems in  \cite{bhasin_reinforcement_2011} and \cite{hester_rtmba:_2012} have implemented this technique, showing that performance equalled and in some cases exceeded that of hand-tuned controllers. The advantage of RL is that it is robust to changes in a system, such as malfunctioning actuators, changes in models parameters, and external disturbances. Optimal control is similar in several ways to RL. Moreover, both have some notion of finding a \textit{policy} that optimizes some objective function. For optimal control, this is minimizing some cost, whereas for RL, it is maximizing a reward. For robotics-based RL, there are several challenges that need to be addressed in order for RL to be realized.
 \begin{itemize}
 \item Continuous State and Action Space: Robots have sensors that output data in a continuous domain.  Likewise, robots themselves act in a continuous environment. This issue is addressed in \cite{gaskett_thesis} and \cite{q_learning_navigation}.
 \item Under-modeling and Uncertainty: The full state may not be observable, and noise requires some method of state estimation.
 \item Goal specification: Crafting reward functions (i.e. \textit{reward shaping}) may be difficult since rewards can rely upon successful completion of a task. This may lead to a sparsity of instances actually influencing the learning of a robotic system.
 \end{itemize}
 
-The outline of the document is the following. First, the popular Q-learning algorithm will be  defined. Next, a rendition of Q-learning called delayed Q-learning will be presented with a proof sketch showing that it is Probably Approximately Correct in Markov Decision Processes (i.e. PAC-MDP), which is a slightly different notion from general PAC learnability (more on this later). It will then be discussed how Q-learning is handled in continuous state/action spaces, which is relevant to robotics applications since modeling is generally done so in a continuous setting. An algorithm called the wire fitted neural network (WFNN) will be presented with a proof that this approach is indeed PAC learnable. 
+The outline of the document is the following UPDATE THIS!!!. First, the popular Q-learning algorithm will be  defined. Next, a rendition of Q-learning called delayed Q-learning will be presented with a proof sketch showing that it is Probably Approximately Correct in Markov Decision Processes (i.e. PAC-MDP), which is a slightly different notion from general PAC learnability (more on this later). It will then be discussed how Q-learning is handled in continuous state/action spaces, which is relevant to robotics applications since modeling is generally done so in a continuous setting. An algorithm called the wire fitted neural network (WFNN) will be presented with a proof that this approach is indeed PAC learnable. 
 
 \section{Notation and Assumptions}
 
@@ -137,7 +137,7 @@ where the parameter $\alpha$ is a function of the number of visits to state $s$ 
 \subsection{Proof of Convergence of Q-learning}
 The Q-learning algorithm has been shown to converge to the optimal value $Q^*$ with probability one \cite{mohri}.  Here, we show an outline of the proof adapted from \cite{mohri}.  
 \begin{proof}
-The proof is via contradiction. Let $(Q_t(s,a))_{t\geq 0}$ denote the sequence of state-action value functions at $(s,a) \in S \times A$ generated by the algorithm.  By definition of the Q-learning updates,
+Let $(Q_t(s,a))_{t\geq 0}$ denote the sequence of state-action value functions at $(s,a) \in S \times A$ generated by the algorithm.  By definition of the Q-learning updates,
 $$
 Q_{t+1}(s_t,a_t) = Q_t(s_t,a_t) + \alpha[r(s_t,a_t) + \gamma \max_{a'}Q_t(s_{t+1},a') - Q_t(s_t,a_t)
 $$
@@ -152,14 +152,33 @@ Suppose $\alpha_t(s,a) = 0$ when $(s,a) \neq (s_t,a_t)$, and $\alpha_t(s_t,a_t)$
 $$
 w_t(s') = \max_{a'}Q_t(s',a') - E_{s'} [\max_{a'}Q_t(s',a') ].
 $$
-Moreover, the vector $\textbf{H}(\textbf{Q}_t)$ has components
+Also, the vector $\textbf{H}(\textbf{Q}_t)$ has components
 $$
 \textbf{H}(\textbf{Q}_t)(x,a) = r(s,a) + \gamma E_{s'}[\max_{a'}Q_t(s',a') ]
 $$
-Inserting this into our previous expression for $Q_{t+1}(s,a)$ (although vectorized) gives
+Inserting this into our previous expression for $Q_{t+1}(s,a)$ (now vectorized) gives
 $$
 \forall (s,a) \in S \times A, \textbf{Q}_{t+1}(s,a) = \textbf{Q}_t(s,a) + \alpha_t(s,a)[\textbf{H}(\textbf{Q}_t)(s,a) - \textbf{Q}_t(s,a) + \gamma\textbf{w}_t]
 $$
+In $\cite{mohri}$ it is shown that by definition of $\textbf{w}_t$, $E_{s'}[\textbf{w}_t | F_t] = 0$, and for any $s' \in S$, $|\textbf{w}_t|$ can be upper bounded in terms of $\textbf{Q}_t$ as
+\begin{align*}
+|\textbf{w}_t(s')| &\leq \max_{a'}|Q_t(s',a')| + |E_{s'}[\max_{a'}Q_t(s',a')] | \\
+& \leq 2\max_{s'}|\max_{a'}Q_t(s',a')|\\
+&= 2|||\textbf{Q}_t||_{\infty}
+\end{align*}
+From this, it can be inferred that
+$$
+E[\textbf{w}^2_t(s) | F_t] \leq 4|||\textbf{Q}_t||^2_{\infty}
+$$
+Lastly $\textbf{H}$ is a $\gamma$-contraction for $||.||_{\infty}$ since
+\begin{align*}
+|\textbf{H}(\textbf{Q}_2)(x,a) - \textbf{H}(\textbf{Q}_1)(x,a) & = |\gamma E_{s'} [\max_{a'}Q_2(s',a') - \max_{a'}Q_1(s',a')] |\\
+&\leq \gamma E_{s'}[ ~|\max_{a'}Q_2(s',a') - \max_{a'}Q_1(s',a')|~]\\
+&\leq \gamma E_{s'}\max_{a'}[~|Q_2(s',a') - Q_1(s',a')|~]\\
+&\leq \gamma \max_{s'}\max_{a'}[~|Q_2(s',a') - Q_1(s',a')|~]\\
+&= \gamma||\textbf{Q}''_2 - \textbf{Q}'_1||_{\infty}
+\end{align*}
+$H$ being a $\gamma$-contraction implies that it admits a fixed point $Q^*$ such that $\textbf{H}(\textbf{Q}^*) = \textbf{Q}^*$. This then sufficiently shows that $\textbf{Q}_t \rightarrow \textbf{Q}^*$
 
 
 \end{proof}
@@ -209,7 +228,7 @@ There exists a number of approaches for incorporating both continous state and a
 
 \section{Discussion/Use of Neural Nets}
 \subsection{Learning Bounds on Neural Nets}
-Generalization bounds can be formulated for multilayered neural networks (NN) through inequalities involving the growth function $\Pi_F(m)$ where $F$ is a function class. First some nomenclature for the NN classifier will be presented. Let $k$ denote the $k^{th}$ node in a neural network. For binary classification, the activation function $\sigma$ is defined as
+Generalization bounds can be formulated for multilayered neural networks (NN) through inequalities involving the growth function $\Pi_F(m)$, where $F$ is a function class. First some nomenclature for the NN classifier will be presented. Let $k$ denote the $k^{th}$ node in a neural network. For binary classification, the activation function $\sigma$ is defined as
 $$
 \sigma(t) = sgn(t)
 $$
@@ -252,29 +271,18 @@ $$
 $$
 \\
 \\
-\textbf{Growth Function Lemma 1}
-$$
-\Pi_F(m) \leq \Pi_{F_1}(m)\Pi_{F_2}(m)
-$$
-
-SHOW PROOF?
-\\
-\\
-\textbf{Growth Function Lemma 2}
+\textbf{Growth Function Lemma}
 $$
 \Pi_F(m) \leq \Pi_{F_1}(m)\Pi_{F_2}(m)
 $$
 where $F$ is the composition $F$ = $F_1 \circ F_2$.
 \\
-
-SHOW PROOF?
-
-
+\\
 Now consider the function composition
 $$
 F = F_l \circ F_{l-1} \circ \cdots F_2 \circ F_1
 $$
-This implies via Lemma 2
+This implies via the above growth function lemma
 
 \begin{align*}
 \Pi_F(m) &\leq \prod_{i=1}^l \Pi_{F_i}(m)\\
@@ -286,9 +294,9 @@ Furthermore using Sauer's lemma on a component function gives
 & \leq \prod_{i=1}^l\prod_{i=1}^{d_i}(\frac{me}{d_{i-1}+1})^{d_{i-1}+1}\\
 \end{align*}
 It well known that the VC dimension of halfspaces in $d$ dimensions is $d +1$, which is why $d+1$ manifests itself in Sauer's lemma.
-The generalization bound given in \cite{mohri_foundations_2012} is 
+The generalization bound given in \cite{mohri} is 
 $$
-R(h) \leq \widehat{R}(h) + \sqrt{\frac{2\log{\Pi_H{(m)}}}{m}} + \sqrt{\frac{\log{\frac{1}{\delta}}}{2m}}
+R(h) \leq \widehat{R}(h) + \sqrt{\frac{2\log{\Pi_H{(m)}}}{m}} + \sqrt{\frac{\log{\frac{1}{\delta}}}{2m}}.
 $$
 Defining the variable $N$, which is the total number of parameters in the NN as 
 $$
@@ -302,11 +310,9 @@ Thus we have with probability at least 1 - $\delta$
 $$
 R(h) \leq \widehat{R}(h) + \sqrt{\frac{2\log{me^N}}{m}} + \sqrt{\frac{\log{\frac{1}{\delta}}}{2m}}
 $$
-SHOW SAMPLE COMPLEXITY TOO?
-\subsection{Implementation}
 
 \section{Conclusion}
-
+This investigation of RL in the context of robotics and optimal control has further influenced the research areas of the authors of this document. Through the presentation/discovery of tractable RL algorithms, it now seems feasible that some of these techniques may be approrpiate for solving problems of motion planning, state estimation, trajectory generation, and navigation all of which are native to the RPK (Chirikjian) and the ASCO (Kobilarov) labs at Johns Hopkins University.
 
 
 \nocite{yang_multiagent_2004}
