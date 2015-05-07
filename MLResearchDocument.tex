@@ -59,7 +59,7 @@ Johns Hopkins University\\
 \maketitle
 
 \begin{abstract}
-We summarize the basic concepts of Reinforcement Learning and detail its application in robotics.  We show key theoretical results and some proofs of convergence.  In particular, we discuss Q-learning and the challenges with adapting it to work in continuous state and action spaces.  
+The is work discusses a widely used Reinforcement Learning technique, called Q-learning.  We show key theoretical results of the algorithm, and we discuss how to apply the algorithm to robotics, where several key challeneges must be addressed for it to be useful.  We discuss how Q-learning can adapted to work in continuous state and action spaces and show a method for computing rewards which generates an adaptive optimal controller from the algorithm.  
 \end{abstract}
 
 \section{Introduction}
@@ -68,23 +68,23 @@ Concepts of machine learning are very much at the forefront of modern research i
 The fields of robotics and optimal control have benefitted from concepts of reinforcement learning \cite{kaelbling_reinforcement_1996} \cite{kober_reinforcement_2013}. Several robotic systems in  \cite{bhasin_reinforcement_2011}, \cite{hester_rtmba:_2012}, and  \cite{kim_autonomous_2003} have implemented this technique to develop stabilizing controllers, showing that performance equalled and in some cases exceeded that of hand-tuned controllers. Others have used RL to develop optimal strategies for teams of multiple robots \cite{yang_multiagent_2004}.  The advantage of RL is that it is robust to changes in a system, such as malfunctioning actuators, changes in models parameters, and external disturbances. Since RL aims to maximize some reward, it is natural to compare it to the theory of optimal control, which tries to minimize some cost.  Both have some notion of finding a \textit{policy} that optimizes some objective function. For robotics-based RL, there are several challenges that need to be addressed in order for RL to be realized.
 \begin{itemize}
 \item Continuous State and Action Space: Robots have sensors that output data in a continuous domain.  Likewise, robots themselves act in a continuous environment. This issue is addressed in \cite{gaskett_thesis} and \cite{q_learning_navigation}.
-\item Under-modeling and Uncertainty: The system dynamics or parameters may be unknown and subject to noise, so often times an algorithm will be forced to learn without a model.
-\item Goal specification: Crafting reward functions (i.e. \textit{reward shaping}) may be difficult since rewards can rely upon successful completion of a task. This may lead to a sparsity of instances actually influencing the learning of a robotic system.
+\item Under-modeling and Uncertainty: The system dynamics or parameters may be unknown and subject to noise, so often times an algorithm must be able to learn without a model.
+\item Goal specification: Crafting reward functions (i.e. \textit{reward shaping}) may be difficult since rewards can rely upon successful completion of a task. This may lead to a sparsity of instances actually influencing the learning of a robotic system \cite{ng_thesis}.
 \end{itemize}
 
-This work aims to discuss RL and to talk about how the challenges mentioned above are dealt with in real systems. The outline of the document is the following. First, the notation and assumptions of RL are presented. Next,the popular Q-learning algorithm will be defined.  This is followed by a description of a version of Q-learning called Delayed Q-learning with a proof sketch showing that it is Probably Approximately Correct in Markov Decision Processes (i.e. PAC-MDP), which is a slightly different notion from general PAC learnability. It will then be discussed how Q-learning is handled in continuous state/action spaces, which is relevant to robotics applications since modeling is generally done so in a continuous setting. A learning bound on neural networks in terms of VC dimension is presented since many adaptations of Q-learning to continuous spaces use neural networks. Closing out the document is a means of reward shaping for optimal control.
+This work discusses RL and talks about how the challenges mentioned above are dealt with in real systems. The outline of the document is the following. First, the notation and assumptions of RL are presented. Next, the popular Q-learning algorithm will be defined.  This is followed by a description of a version of Q-learning called Delayed Q-learning with a proof sketch showing that it is Probably Approximately Correct in Markov Decision Processes (i.e. PAC-MDP), which is a slightly different notion from general PAC learnability. It will then be discussed how Q-learning is handled in continuous state/action spaces, which is relevant to robotics applications since modeling is generally done so in a continuous setting. A learning bound on neural networks in terms of VC dimension is presented since many adaptations of Q-learning to continuous spaces use neural networks. Closing out the document is a means of reward shaping for optimal control.
 
 
 \section{Notation and Assumptions of Reinforcement Learning}
 
 Reinforcement Learning (RL) has been defined as the study of planning and learning in a scenario where a learner actively interacts with the environment to achieve a certain goal \cite{mohri}. The learner, or agent, collects information through a course of actions by interacting with the environment.  The set of all possible actions is defined as $a \in A$ and the set of all possible states is $s \in S$. The environment is modeled as a Markov Decision Process (MDP).  That is, for each action that the agent takes, two pieces of information are obtained: a reward $r(s,a)$ for executing $a$ while in $s$, and a new state in the environment $s'$.  For each state-action pair $(s,a)$, there is a transition probability which describes the distribution of states from which $s'$ is drawn.  The objective of the agent is to choose actions which maximize its reward and hence help it achieve its goal.  Since the agent only receives rewards related to the action just taken, some other mechanism must be used to account for long-term reward feedback.
-The agent must deem whether it is more appropriate to explore further unknown states $s \in S$ and actions $a \in A$ or utilize the information already collected in order to optimize (maximize) the current reward $r(s,a)$. This tradeoff if formally referred to as \textit{exploration vs. expoitation}. The particular action that an agent will choose given a state is given by a mapping $\pi : S \rightarrow A$ known as the policy. RL algorithms attempt to find the optimal policy $\pi^*$.
+The agent must deem whether it is more appropriate to explore further unknown states $s \in S$ and actions $a \in A$ or utilize the information already collected in order to optimize (maximize) the current reward $r(s,a)$. This tradeoff if formally referred to as \textit{exploration vs. expoitation}. The particular action that an agent will choose given a state is given by a mapping $\pi : S \rightarrow A$ known as the policy. RL algorithms attempt to find the optimal policy $\pi^*$ which maximizes rewards.
 
- A more intuitive concept of RL is that immediate rewards are incrementally extracted through actions made with some environment (as opposed to a batch collection and training scenario). This incremental obtainment of information is more reflective of human nature in that we tend to interact with our environment and learn based off the actions we make and information we receive. An example would be driving over a pothole in the road, and realizing that this negative reward will influence actions taken in the future (i.e. perhaps anticipate this pothole or take a different route). This policy can be quantified in terms of what is known to be a \textit{policy value}, $V_{\pi}$ which is given as 
+ A more intuitive concept of RL is that immediate rewards are incrementally extracted through actions made with some environment (as opposed to a batch collection and training scenario). This incremental obtainment of information is more reflective of human nature in that we tend to interact with our environment and learn based off the actions we make and information we receive. An example would be driving over a pothole in the road, and realizing that this negative reward will influence actions taken in the future (i.e. perhaps anticipate this pothole or take a different route). This policy can be quantified in terms of what is known to be a \textit{policy value} $V_{\pi}$, which is given as 
 $$
 V_{\pi} = E[\sum_{\tau = 0}^{T-t}r(s_{t+\tau},\pi(s_{t+\tau}))|s_t = s].
 $$
-Qualitatively, this policy value is the expected reward $r(s,a)$ parameterized by a state $s$ and action $a$ that is yielded when starting at $s$ using policy $\pi$. It is summed over a finite time horizon. The \textit{optimal policy} is in terms of the policy value, moreover $V^{*}=V_{\pi^*}(s) = \max_{\pi} V_{\pi}(s)$. Therefore $V^{*}$ is the optimal cummulative reward that the learner may expect to receive while starting at $s$. The next relevant quantity is the optimal state-action value function $Q^*(s)$, which is defined for all $(s,a) \in S \times A$ as the expected return for taking action $a$ at state $s$ and then following the optimal policy.  It is given in terms of the optimal policy value as
+Qualitatively, this policy value is the expected reward $r(s,a)$ parameterized by a state $s$ and action $a$ that is yielded when starting at $s$ using policy $\pi$. It is summed over a finite time horizon. The optimal policy is in terms of the policy value, moreover $V^{*}=V_{\pi^*}(s) = \max_{\pi} V_{\pi}(s)$. Therefore $V^{*}$ is the optimal cummulative reward that the learner may expect to receive while starting at $s$ and executing $\pi^*$. The next relevant quantity is the optimal state-action value function $Q^*(s,a)$, which is defined for all $(s,a) \in S \times A$ as the expected return for taking action $a$ at state $s$ and then following the optimal policy.  It is given in terms of the optimal policy value as
 $$
 Q^*(s,a) = E[r(s,a)] + \gamma \sum_{s' \in S}Pr[s' | s,a]V^*(s').
 $$
@@ -97,9 +97,9 @@ $$V^*(s) = \max_{a\in A} Q^*(s,a)$$
 and the optimal policy is given as 
 $$\pi^*(s) = \argmax_{a\in A} Q^*(s,a).$$
 Thus, some methods seek to approximate $Q^*$ by exploring the state-action space and thereby obtain $\pi^*$.
-The next section defines one such algorithm called Q-learning that seeks out this optimal state-action value function. 
+The next section defines one such algorithm, called Q-learning, that seeks out this optimal state-action value function. 
 \section{Q-learning}
-Q-learning is an algorithm where the objective is to estimate the optimal state-action value function $Q^*$, when the model of the environment is unknown or changing. It does not attempt to model the transition probabilities from one state to another.  Hence it is model-free and can learn in under-modeled robotic systems.  It consists of the following steps.  First, sample a new state $s'$ by executing action $a$ from state $s$.  Then, update the state-action value function using the following update:
+Q-learning is an algorithm where the objective is to estimate the optimal state-action value function $Q^*$. It does not attempt to model the transition probabilities from one state to another.  Hence it is model-free and can learn in under-modeled robotic systems or changing environments.  The state and action spaces considered are discretized and finite.  The algorithm consists of the following steps.  First, sample a new state $s'$ by executing action $a$ from state $s$.  Then, update the state-action value function using the following update:
 $$Q(s,a) \leftarrow \alpha Q(s,a) + (1-\alpha)[r(s,a) + \gamma \max_{a' \in A}Q(s', a')],$$
 where the parameter $\alpha$ is a function of the number of visits to state $s$ and $\gamma \in [0,1)$ is a factor used to discount future rewards.  A more detailed description of the procedure is shown in Algorithm \ref{qlearning}, where SelectAction($\pi,s$) must ensure that each state can be visited infinitely many times, like in an $\epsilon$-greedy approach.  That is, a random action is chosen with probability $\epsilon$, and the action is chosen optimally as $\argmax_{a\in A} Q(s,a)$ with probability $1-\epsilon$.
 \begin{algorithm}
@@ -142,37 +142,43 @@ $$
 $$
 \gamma\alpha_t(s,a)[\max_{a'}Q_t(s',a') - E_{s'}[\max_{a'}Q_t(s',a')] ].
 $$
-Suppose $\alpha_t(s,a) = 0$ when $(s,a) \neq (s_t,a_t)$, and $\alpha_t(s_t,a_t)$ otherwise. Moreover let $\textbf{Q}_t$ have components $Q_t(s_t,a_t)$, and the vector $\textbf{w}_t$ be defined by its $s'^{th}$ component as
+Suppose $\alpha_t(s,a) = 0$ when $(s,a) \neq (s_t,a_t)$, and $\alpha_t(s,a) = \alpha_t(s_t,a_t)$ otherwise. Moreover let $\textbf{Q}_t$ have components $Q_t(s_t,a_t)$, and the vector $\textbf{w}_t$ be defined by its $s'$th component as
 $$
 w_t(s') = \max_{a'}Q_t(s',a') - E_{s'} [\max_{a'}Q_t(s',a') ].
 $$
 Also, the vector $\textbf{H}(\textbf{Q}_t)$ has components
 $$
-\textbf{H}(\textbf{Q}_t)(x,a) = r(s,a) + \gamma E_{s'}[\max_{a'}Q_t(s',a') ]
+\textbf{H}(\textbf{Q}_t)(x,a) = r(s,a) + \gamma E_{s'}[\max_{a'}Q_t(s',a') ].
 $$
 Inserting this into our previous expression for $Q_{t+1}(s,a)$ (now vectorized) gives
 $$
-\forall (s,a) \in S \times A, \textbf{Q}_{t+1}(s,a) = \textbf{Q}_t(s,a) + \alpha_t(s,a)[\textbf{H}(\textbf{Q}_t)(s,a) - \textbf{Q}_t(s,a) + \gamma\textbf{w}_t]
+\forall (s,a) \in S \times A, \textbf{Q}_{t+1}(s,a) = \textbf{Q}_t(s,a) + \alpha_t(s,a)[\textbf{H}(\textbf{Q}_t)(s,a) - \textbf{Q}_t(s,a) + \gamma\textbf{w}_t].
 $$
-In $\cite{mohri}$ it is shown that by definition of $\textbf{w}_t$, $E_{s'}[\textbf{w}_t | F_t] = 0$, and for any $s' \in S$, $|\textbf{w}_t|$ can be upper bounded in terms of $\textbf{Q}_t$ as
-\begin{align*}
-|\textbf{w}_t(s')| &\leq \max_{a'}|Q_t(s',a')| + |E_{s'}[\max_{a'}Q_t(s',a')] | \\
-& \leq 2\max_{s'}|\max_{a'}Q_t(s',a')|\\
-&= 2|||\textbf{Q}_t||_{\infty}
-\end{align*}
-From this, it can be inferred that
+We then make use of a theorem from stochastic approximation theory \cite{mohri} which states that given a sequence
 $$
-E[\textbf{w}^2_t(s) | F_t] \leq 4|||\textbf{Q}_t||^2_{\infty}
+\forall (s) \in S , \textbf{x}_{t+1}(s) = \textbf{x}_t(s) + \alpha_t(s)[\textbf{H}(\textbf{x}_t)(s) - \textbf{x}_t(s) + \gamma\textbf{w}_t]
 $$
-Lastly $\textbf{H}$ is a $\gamma$-contraction for $||.||_{\infty}$ since
-\begin{align*}
-|\textbf{H}(\textbf{Q}_2)(x,a) - \textbf{H}(\textbf{Q}_1)(x,a) & = |\gamma E_{s'} [\max_{a'}Q_2(s',a') - \max_{a'}Q_1(s',a')] |\\
-&\leq \gamma E_{s'}[ ~|\max_{a'}Q_2(s',a') - \max_{a'}Q_1(s',a')|~]\\
-&\leq \gamma E_{s'}\max_{a'}[~|Q_2(s',a') - Q_1(s',a')|~]\\
-&\leq \gamma \max_{s'}\max_{a'}[~|Q_2(s',a') - Q_1(s',a')|~]\\
-&= \gamma||\textbf{Q}''_2 - \textbf{Q}'_1||_{\infty}
-\end{align*}
-$H$ being a $\gamma$-contraction implies that it admits a fixed point $Q^*$ such that $\textbf{H}(\textbf{Q}^*) = \textbf{Q}^*$. This then sufficiently shows that $\textbf{Q}_t \rightarrow \textbf{Q}^*$.
+where $\textbf{H}$ is a $||.||_{\infty}$-contraction with fixed point $\textbf{x}^*$, $\sum_{t=0}^{t=\infty}\alpha_t = \infty$, and $\sum_{t=0}^{t=\infty}\alpha_t^2 < \infty$, then $\textbf{x}_t(s)$ converges almost surely to $\textbf{x}^*(s)$ (some conditions on the expectation of $\textbf{w}_t$ are omitted but must also be satisfied).  Since the $\textbf{Q}$ update equation stated previously meets these conditions, this sufficiently shows that $\textbf{Q}_t \rightarrow \textbf{Q}^*$.
+
+%In $\cite{mohri}$ it is shown that by definition of $\textbf{w}_t$, $E_{s'}[\textbf{w}_t | F_t] = 0$, and for any $s' \in S$, $|\textbf{w}_t|$ can be upper bounded in terms of $\textbf{Q}_t$ as
+%\begin{align*}
+%|\textbf{w}_t(s')| &\leq \max_{a'}|Q_t(s',a')| + |E_{s'}[\max_{a'}Q_t(s',a')] | \\
+%& \leq 2\max_{s'}|\max_{a'}Q_t(s',a')|\\
+%&= 2|||\textbf{Q}_t||_{\infty}
+%\end{align*}
+%From this, it can be inferred that
+%$$
+%E[\textbf{w}^2_t(s) | F_t] \leq 4|||\textbf{Q}_t||^2_{\infty}
+%$$
+%Lastly $\textbf{H}$ is a $\gamma$-contraction for $||.||_{\infty}$ since
+%\begin{align*}
+%|\textbf{H}(\textbf{Q}_2)(x,a) - \textbf{H}(\textbf{Q}_1)(x,a) & = |\gamma E_{s'} [\max_{a'}Q_2(s',a') - \max_{a'}Q_1(s',a')] |\\
+%&\leq \gamma E_{s'}[ ~|\max_{a'}Q_2(s',a') - \max_{a'}Q_1(s',a')|~]\\
+%&\leq \gamma E_{s'}\max_{a'}[~|Q_2(s',a') - Q_1(s',a')|~]\\
+%&\leq \gamma \max_{s'}\max_{a'}[~|Q_2(s',a') - Q_1(s',a')|~]\\
+%&= \gamma||\textbf{Q}''_2 - \textbf{Q}'_1||_{\infty}
+%\end{align*}
+%$H$ being a $\gamma$-contraction implies that it admits a fixed point $Q^*$ such that $\textbf{H}(\textbf{Q}^*) = \textbf{Q}^*$. This then sufficiently shows that $\textbf{Q}_t \rightarrow \textbf{Q}^*$.
 
 These convergence results, however, make no guarantee about the performance of Q-learning in regard to the number of steps taken in the environment.  In the next section, we discuss an adaptation of Q-learning that provably converges to an $\epsilon$-optimal policy within some number of time steps that is polynomially bounded by the size of the action and state spaces and other relevant quantities.
 
@@ -182,7 +188,7 @@ A variant of Q-learning, called Delayed Q-learning, was the first to show that e
 
 Delayed Q-learning differs from traditional Q-learning in a few ways.  Rather than updating the Q-values at every time step, the algorithm updates $Q(s,a)$ when a state-action pair $(s,a)$ has been executed $m$ times since its last update.  It also uses a different update function:
 $$Q_{t+1}(s,a) = \frac{1}{m}\sum_{i=1}^m(r_{k_i}+\gamma V_{k_i}(s_{k_i})) + \epsilon_1$$  
-where $r_i$ is the $i$th reward received and $s_{k_1},\dots,s_{k_m}$ are the $m$ most recent next-states observed form executing $(s,a)$ at times $k_1 < \dots < k_m = t$, respectively. The user defines $\epsilon_1$ and $m$.  After $m$ executions of $(s,a)$ an update will only occur if the new Q-value estimate is at least $\epsilon_1$ smaller than the previous estimate.  If it is not smaller, then updates of $Q(s,a)$ are no longer allowed until another Q-value estimate (for a different state-action pair) is updated.  When the algorithm begins, $Q(s,a)$ is initialized to $1/(1-\gamma)$.
+where $r_i$ is the $i$th reward received and $s_{k_1},\dots,s_{k_m}$ are the $m$ most recent next-states observed form executing $(s,a)$ at times $k_1 < \dots < k_m = t$, respectively. The user defines $\epsilon_1$ and $m$ (in terms of $\epsilon$).  After $m$ executions of $(s,a)$ an update will only occur if the new Q-value estimate is at least $\epsilon_1$ smaller than the previous estimate.  If it is not smaller, then updates of $Q(s,a)$ are no longer allowed until another Q-value estimate (for a different state-action pair) is updated.  When the algorithm begins, $Q(s,a)$ is initialized to $1/(1-\gamma)$.
 
 Waiting for $m$ samples before updating has an averaging effect that helps minimize any randomness. Adding $\epsilon_1$ to the update function encourages optimistic Q-value estimates which in turn facilitates safe exploration. By starting with high initial Q-values and only allowing Q-values to decrease ensures that each state is regularly visited and that each action is tried from every state.  This makes sure each state-action pair receives enough samples to converge to the correct Q-value.  In the following section, we outline the proof that shows Delayed Q-learning is PAC-MDP.
 
@@ -197,19 +203,19 @@ As noted previously, delaying updates for $m$ samples has an averaging effect.  
 Robotic systems are a central application area of Q-learning.  The following sections discuss the key challenges of applying Q-learning to the control of robotic systems.  Traditional Q-learning already addresses the fact that the dynamics or parameters of a system may not be known.  Next, we discuss how Q-learning has been adapted to work in continuous state and action spaces and how rewards are typically defined to achieve optimal control. 
 
 \subsection{Q-learning with Continuous States and Actions}
-As we have discussed, in traditional Q-learning, the state and action spaces of a system are discretized and finite, with a single Q-value assigned to each state-action pair.  Since robots act in the real world where measurements are continuously valued, it is more natural to represent states in a continuous domain.  Moreover, this alleviates any issues with perceptual aliasing, where two similar (but significantly different) states are considered the same in a discretized space.  One could attempt to approximate a continuous space by finely discretizing it, but this increases the amount of memory required to store $Q$-values and the learning time for Q-learning becomes intractable.  In addition, in a grid-based representation there is no notion of similarity between neighboring states, so discrete representations do not generalize well \cite{gaskett_thesis}.  
+As we have discussed, in traditional Q-learning, the state and action spaces of a system are discretized and finite, with a single Q-value assigned to each state-action pair.  Since robots act in the real world where measurements are continuously valued, it is more natural to represent states in a continuous domain.  Moreover, this alleviates any issues with perceptual aliasing, where two similar (but significantly different) states are considered the same in a discretized space.  One could attempt to approximate a continuous space by finely discretizing it, but this increases the amount of memory required to store Q-values and the learning time for Q-learning becomes intractable.  In addition, in a grid-based representation there is no notion of similarity between neighboring states, so discrete representations do not generalize well \cite{gaskett_thesis}.  
 
 Generalization can be introduced by mapping states to action-values via a function approximator.  Several existing systems use a neural network as the function approximator \cite{lin} \cite{deep_rl} \cite{gaskett_thesis} with success. In \cite{lin} and \cite{deep_rl}, each possible action has an associated neural network which approximates the reward of executing that action from the state input to the neural net.  The neural networks were trained to output the correct action-values based on the rewards received from acting in the environment.  
 
-These methods still, however, rely on a discretized action space.  This means that an agent can only act in a finite number of predetermined ways even though most actuators take inputs from a continuous control space. So, its chances of acting optimally (with respect to the underlying continuous action space) is small.  Like with the state space, discretizing the action space has its drawbacks: high memory use and poor generalization.  Furthermore, using continuous actions gives more accurate and predictable movement, reduces wear, and improves energy consumption in practice \cite{gaskett_thesis}. 
+These methods still, however, rely on a discretized action space.  This means that an agent can only act in a finite number of predetermined ways even though most actuators take inputs from a continuous control space. So, its chances of acting optimally (with respect to the underlying continuous control space) are small.  Like with the state space, discretizing the action space has its drawbacks: high memory use and poor generalization.  Furthermore, using continuous actions gives more accurate and predictable movement, reduces wear, and improves energy consumption in practice \cite{gaskett_thesis}. 
 
-There exists a number of approaches for incorporating both continous state and action spaces into Q-learning.  In \cite{takahashi}, states and actions are coarsely discretized, and linear interpolation is used to represent intermediate states.  In \cite{gaskett_thesis}, a single neural network takes the current state as input, and the outputs correspond to control points of an action-reward interpolator.  The Q-value of any given action can be smoothly, approximately computed using the interpolator.  The author applies this method, known as a Wire-Fitted Neural Network, to waypoint navigation of a boat in simulation with success.
+There exist a number of approaches for incorporating both continous state and action spaces into Q-learning.  In \cite{takahashi}, states and actions are coarsely discretized, and linear interpolation is used to represent intermediate states.  In \cite{gaskett_thesis}, a single neural network takes the current state as input, and the outputs correspond to control points of an action-reward interpolator.  The Q-value of any given action can be smoothly, approximately computed using the interpolator.  The author applies this method, known as a Wire-Fitted Neural Network, to waypoint navigation of a boat in simulation with success.
 
 Actor-critic methods contain two separate, interacting subsystems.  One estimates the long-term utility for each state, and the other learns to choose the optimal action in each state.  \cite{bhasin_reinforcement_2011} describes such a system for RL-based optimal control of uncertain nonlinear systems, where the actor and critic each consist of a neural network.  Since neural networks are so widely adopted in RL, we show proof that they are PAC-learnable, and hence a good choice of function approximator, in Section 5.2.
 
-Carden uses Nadaraya-Watson kernel regression \cite{nadaraya} to estimate the Q-value of a state-action pair based on past experiences and shows convergence to the true Q-values within some tolerance with probability 1 \cite{carden2014}.  This type of regression estimates the value at a particular point as a weighted average of nearby observations using non-negative kernel function to assign weights to observations.  Its proof of convergence is quite technical, so we briefly discuss the key details.  It follows very similarly to the proof of convergence for traditional Q-learning given by Watkins \cite{watkins}, which uses an artifically controlled finite-length MDP called an Action-Replay Process (ARP) for the purposes of the proof.  The action space of the ARP is equivalent to that of the actual process MDP and the state space of the ARP is built from the state space of the actual MDP. The ARP replays sequences of actions in such way that the optimal Q-values are known for the ARP. Watkins shows that as the length of the ARP approaches infinity, the ARP's transition probabilties and expected rewards converge to those of the real process.  In addition, bounds put on the learning rate (the sum of rates must tend to inifinity while the sum of squares of rates must be less than inifinity) ensure this convergence with probability one.  Since the ARP tends towards the real process, so do its optimal Q-values.  \cite{carden2014} makes an additional step and shows that the expected rewards for the ARP are equivalent to the kernel regression estimates.
+Carden uses Nadaraya-Watson kernel regression \cite{nadaraya} to estimate the Q-value of a state-action pair based on past experiences and shows convergence to the true Q-values within some tolerance with probability 1 \cite{carden2014}.  This type of regression estimates the value at a particular point as a weighted average of nearby observations using non-negative kernel function to assign weights to observations.  Its proof of convergence is quite technical, so we briefly discuss the key details.  It follows very similarly to the proof of convergence for traditional Q-learning given by Watkins \cite{watkins}, which uses an artifically controlled finite-length MDP called an Action-Replay Process (ARP) for the purposes of the proof.  The action space of the ARP is equivalent to that of the actual process MDP and the state space of the ARP is built from the state space of the actual MDP. The ARP replays sequences of actions in such way that the optimal Q-values are known for the ARP. Watkins shows that as the length of the ARP approaches infinity, the ARP's transition probabilties and expected rewards converge to those of the real process.  In addition, bounds put on the learning rate (the sum of rates must tend to inifinity while the sum of squares of rates must be less than inifinity) ensure this convergence with probability one.  Since the ARP tends towards the real process, so do its optimal Q-values.  Carden makes an additional step and shows that the expected rewards for the ARP are equivalent to the kernel regression estimates.
 
-Many of the extensions of Q-learning to continuous state and action spaces have not shown provable convergence.  Although Carden's method converges, it must search for the optimal action over a continuous action space, which is non-trivial and limits the ability of the alorithm to work in real-time.
+Many of the extensions of Q-learning to continuous state and action spaces have not shown provable convergence.  Although Carden's method converges, it must search for the optimal action over a continuous action space, which is non-trivial and limits the ability of the algorithm to work in real-time.
 
 \subsection{Learning Bounds on Neural Nets}
  In several of the adaptations of Q-learning to continuous spaces discussed, a neural network is used for function approximation.  This motivates presenting a generalization bound in terms of a growth function, and then later in terms of VC dimension, which equivalently means these function approximators are indeed PAC learnable and hence a good choice of approximator for the algorithms.
@@ -272,12 +278,12 @@ This implies via the above growth function lemma
 
 \begin{align*}
 \Pi_F(m) &\leq \prod_{i=1}^l \Pi_{F_i}(m)\\
-& \leq \prod_{i=1}^l\prod_{j=1}^{d_i} \Pi_{F_{i,j}}(m)\\
+& \leq \prod_{i=1}^l\prod_{j=1}^{d_i} \Pi_{F_{i,j}}(m).\\
 \end{align*}
 Furthermore using Sauer's lemma on a component function gives
 \begin{align*}
 \Pi_F(m)& \leq \prod_{i=1}^l\prod_{j=1}^{d_i} \Pi_{F_{i,j}}(m)\\
-& \leq \prod_{i=1}^l\prod_{i=1}^{d_i}(\frac{me}{d_{i-1}+1})^{d_{i-1}+1}\\
+& \leq \prod_{i=1}^l\prod_{i=1}^{d_i}(\frac{me}{d_{i-1}+1})^{d_{i-1}+1}.\\
 \end{align*}
 It well known that the VC dimension of halfspaces in $d$ dimensions is $d +1$, which is why $d+1$ manifests itself in Sauer's lemma.
 The generalization bound given in \cite{mohri} is 
@@ -286,21 +292,21 @@ R(h) \leq \widehat{R}(h) + \sqrt{\frac{2\log{\Pi_H{(m)}}}{m}} + \sqrt{\frac{\log
 $$
 Defining the variable $N$, which is the total number of parameters in the NN as 
 $$
-N = \prod_{i=1}^l\prod_{i=1}^{d_i}(\frac{me}{d_{i-1}+1})^{d_{i-1}+1}
+N = \prod_{i=1}^l\prod_{i=1}^{d_i}(\frac{me}{d_{i-1}+1})^{d_{i-1}+1}.
 $$ 
 gives a nicer (but looser) bound on the growth function as
 $$
-\Pi_H{(m)} = me^N
+\Pi_H{(m)} = me^N.
 $$
-Thus we have with probability at least 1 - $\delta$
+Thus, we have with probability at least 1 - $\delta$
 $$
-R(h) \leq \widehat{R}(h) + \sqrt{\frac{2\log{me^N}}{m}} + \sqrt{\frac{\log{\frac{1}{\delta}}}{2m}}
+R(h) \leq \widehat{R}(h) + \sqrt{\frac{2\log{me^N}}{m}} + \sqrt{\frac{\log{\frac{1}{\delta}}}{2m}}.
 $$
 
 \subsection{Reward Crafting for Optimal Control}
-Optimal control theory deals with deriving control policies which aim to minimize some cost specified by the user.  This is rather similar to goal of Q-learning which aims to maximize the reward received by an agent over some time-horizon.  In fact, \cite{sutton} claims that reinforcement learning is equivalent to direct adaptive optimal control.  When an accurate model of the system to be controlled is not available, adaptive optimal control methods can be applied to trajectory tracking and optimal control scenarios.  In optimal control a cost is typically given as 
+Optimal control theory deals with deriving control policies which aim to minimize some cost specified by the user.  This is rather similar to goal of Q-learning which aims to maximize the reward received by an agent over some time-horizon.  In fact, \cite{sutton} claims that reinforcement learning is equivalent to direct adaptive optimal control.  When an accurate model of the system to be controlled is not available, adaptive optimal control methods can be applied to trajectory tracking and optimal control scenarios.  In optimal control, a cost is typically given as 
 $$J = \phi(x(t_f),t_f) + \int_{t_0}^{t_f} L(x(t),u(t),t)dt$$
-where $x(t)$ is the state trajectory, $u(t)$ is the control sequence, and $\phi$ is a terminal cost.  An equivalent accumulated RL reward over some trajectory can be given as $-J$.  A natural choice for $L$ then is $L = \frac{1}{2}x(t)^TQx(t) + u(t)^TRu(t)$, where $Q$ and $R$ are positive definite matrices.  This quadratic cost is often associated with the Linear Quadratic Regulator (LQR) \cite{lqr} and is employed by Ng \cite{ng_autonomous_2006} for RL-based stabilization of an autonomous helicopter.  This choice of reward encourages the system to remain close to the origin (i.e. stabilizes the system) while also encouraging small control outputs and smooth control transitions.  Ng also discusses in \cite{ng_thesis} a potential-based method for specifying rewards that can lead to significant speedups of the learning process.
+where $x(t)$ is the state trajectory, $u(t)$ is the control sequence, and $\phi$ is a terminal cost.  An equivalent accumulated RL reward over some trajectory can be given as $-L$, and $-\phi$ is a reward given at an absorbing state.  A natural choice for $L$ then is $L = \frac{1}{2}x(t)^TQx(t) + u(t)^TRu(t)$, where $Q$ and $R$ are positive definite matrices.  This quadratic cost is often associated with the Linear Quadratic Regulator (LQR) \cite{lqr} and is employed by Ng \cite{ng_autonomous_2006} for RL-based stabilization of an autonomous helicopter.  This choice of reward encourages the system to remain close to the origin (i.e. stabilizes the system) while also encouraging small control outputs and smooth control transitions.  Ng also discusses in \cite{ng_thesis} a potential-based method for specifying rewards that can lead to significant speedups of the learning process.
 
 \section{Conclusion}
 This work discusses the widely used model-free RL algorithm, called Q-learning, and demonstrates its theoretical convergence guarantees.  A variant of Q-learning is presented and shown to be PAC-MDP.  We then describe extensions of Q-learning that deal with continuous state and action spaces, primarily through the use of neural networks.  This motivates a proof that shows that neural networks are PAC.  Finally, we show the typical structure for specifying rewards when the goal of the agent is optimal control.  
