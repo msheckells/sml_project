@@ -58,6 +58,10 @@ Johns Hopkins University\\
 
 \maketitle
 
+\begin{abstract}
+We summarize the basic concepts of Reinforcement Learning and detail its application in robotics.  We show key theoretical results and some proofs of convergence.  In particular, we discuss Q-learning and the challenges with adapting it to work in continuous state and action spaces.  
+\end{abstract}
+
 \section{Introduction}
 Concepts of machine learning are very much at the forefront of modern research interests. However, the popular supervised learning framework does not account for environments that are constantly in flux. A notion that suggests a means to handle these changing environments is Reinforcement Learning (RL). Unlike supervised learning, RL actively receives information by engaging an environment through \textit{actions}. By doing so, two types of information are rendered: the current \textit{state}, and some quantifiable \textit{reward}. RL aims to maximize these reward values for taking an action from a particular state, so that a system can learn to act optimally in a given situation.
 
